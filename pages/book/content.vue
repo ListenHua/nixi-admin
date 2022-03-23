@@ -16,17 +16,21 @@
 					<view class="uni-group">
 						<button class="uni-button" size="mini" type="primary"
 							@click="openEditContentPop(item,index)">编辑内容</button>
-						<button class="uni-button" size="mini" type="warn">{{$t('common.button.delete')}}</button>
+						<button class="uni-button" size="mini" type="warn"
+							@click="deleteContent(item,index)">{{$t('common.button.delete')}}</button>
 					</view>
 				</uni-td>
 			</uni-tr>
 		</uni-table>
-		<uni-popup ref="contentPop" type="center">
+		<uni-popup ref="contentPop" type="center" :mask-click="false">
 			<view class="content-edit-pop">
-				<uni-easyinput type="text" v-model="contentText.title" />
-				<view id="editor"></view>
+				<uni-easyinput type="text" v-model="contentText.title" placeholder="请输入标题"
+					style="margin-bottom: 30rpx;" />
+				<!-- <view id="editor"></view> -->
+				<ckeditor :editor="editor" v-model="contentText.content" :config="editorConfig"></ckeditor>
 				<view class="button-box">
 					<button size="mini" type="primary" @click="addBookContent">确定</button>
+					<button size="mini" type="default" @click="closeEditPop">取消编辑</button>
 				</view>
 			</view>
 		</uni-popup>
@@ -34,7 +38,10 @@
 </template>
 
 <script>
-	import wangeditor from 'wangeditor'
+	import wangeditor from 'wangeditor';
+	import ClassicEditor from '@ckeditor/ckeditor5-build-classic';
+	// import CodeBlock from '@ckeditor/ckeditor5-code-block/src/codeblock';
+
 	export default {
 		data() {
 			return {
@@ -49,6 +56,12 @@
 				editContent: "",
 				editIndex: "",
 				bookId: '',
+
+				editor: ClassicEditor,
+				editorData: '<p>Content of the editor.</p>',
+				editorConfig: {
+					// The configuration of the editor.
+				}
 			}
 		},
 		onLoad(option) {
@@ -56,6 +69,10 @@
 			this.getData()
 		},
 		methods: {
+			// 关闭编辑弹窗
+			closeEditPop() {
+				this.$refs.contentPop.close()
+			},
 			// 获取数据
 			getData() {
 				let id = this.bookId
@@ -68,12 +85,37 @@
 					this.loading = false
 				})
 			},
+			// 删除内容
+			deleteContent(item, index) {
+				let that = this
+				let list = this.bookInfo.list
+				uni.showModal({
+					title: "是否删除标题为：“" + item.title + "”的内容",
+					success(res) {
+						console.log(res)
+						if (res.confirm) {
+							list.splice(index, 1)
+							that.$request('addBookContent', {
+								_id: that.bookInfo._id,
+								list
+							}, {
+								functionName: 'edit'
+							}).then(res => {
+								uni.showToast({
+									title: "删除成功"
+								})
+								that.getData()
+							})
+						}
+					}
+				})
+			},
 			// 确定编辑
 			addBookContent() {
 				let list = this.bookInfo.list
 				let index = this.editIndex
-				this.contentText.content = this.contentEditor.txt.html()
-				if (index.toString()) {
+				// this.contentText.content = this.contentEditor.txt.html()
+				if (index || index === 0) {
 					list[index] = this.contentText
 				} else {
 					list.push(this.contentText)
@@ -92,13 +134,14 @@
 						title: "",
 						content: ""
 					}
+					this.editIndex = ''
 					this.getData()
 				})
 			},
 			// 打开编辑器弹窗
 			openEditContentPop(item, index) {
 				console.log("????", item, index);
-				if (item && index.toString()) {
+				if (item) {
 					this.editStatus = 'edit'
 					this.editIndex = index
 				} else {
@@ -137,7 +180,7 @@
 		margin: 40rpx 0;
 
 		button {
-			margin: 0;
+			margin: 0 20rpx;
 		}
 	}
 </style>

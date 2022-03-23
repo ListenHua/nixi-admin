@@ -7,6 +7,9 @@ const lang = uni.getLocale()
 // #ifndef VUE3
 import Vue from 'vue'
 import VueI18n from 'vue-i18n'
+import CKEditor from '@ckeditor/ckeditor5-vue2';
+
+Vue.use( CKEditor );
 Vue.config.productionTip = false
 Vue.use(VueI18n)
 // 通过选项创建 VueI18n 实例
@@ -15,6 +18,7 @@ const i18n = new VueI18n({
   messages, // 设置地区信息
 })
 Vue.use(plugin)
+
 App.mpType = 'app'
 const app = new Vue({
   i18n,
