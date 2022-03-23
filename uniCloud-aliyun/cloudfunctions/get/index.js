@@ -3,10 +3,10 @@ const db = uniCloud.database()
 exports.main = async (event, context) => {
 	switch (event.action) {
 		case 'getBookList': {
-			return getBookList(event)
+			return getBookList(event.params)
 		}
 		case 'getBookContent': {
-			return getBookContent(event)
+			return getBookContent(event.params)
 		}
 		default: {
 			return
@@ -17,10 +17,10 @@ exports.main = async (event, context) => {
 async function getBookList(event) {
 	let limit = event.limit ? event.limit : 15
 	let page = event.page ? event.page - 1 < 0 ? 0 : event.page - 1 : 0
-	let search = event.search ?{title: new RegExp(`${event.search}`)}:{}
+	let key = event.key ? { title: event.key } : {}
 	let start = page * limit
 	const collection = db.collection('bookList')
-	const res = await collection.where(search).skip(start).limit(limit).get()
+	const res = await collection.where(key).skip(start).limit(limit).get()
 	let result = res.data.map(val => {
 		delete val.list
 		return val
@@ -39,17 +39,20 @@ async function getBookContent(event) {
 		console.log(res);
 		if (res.data.length == 0) {
 			return {
+				code: 500,
 				msg: "未查找到该书籍内容",
 				data: ''
 			}
 		} else {
 			return {
+				code: 200,
 				msg: "请求成功",
 				data: res.data[0]
 			}
 		}
 	} else {
 		return {
+			code: 500,
 			msg: "请输入参数"
 		}
 	}

@@ -37,7 +37,8 @@
 						<view class="uni-group">
 							<button class="uni-button" size="mini" type="primary"
 								@click="openEditPop(item)">{{$t('common.button.edit')}}</button>
-							<button class="uni-button" size="mini" type="primary">编辑内容</button>
+							<button class="uni-button" size="mini" type="primary"
+								@click="toEditContent(item)">编辑内容</button>
 							<button class="uni-button" size="mini" type="warn">{{$t('common.button.delete')}}</button>
 						</view>
 					</uni-td>
@@ -50,23 +51,25 @@
 		</view>
 		<uni-popup ref="editPop" type="center">
 			<view class="edit-pop">
-				<view class="nav-title">修改内容</view>
-				<uni-forms :modelValue="editFormData">
-					<uni-forms-item label="ID" name="name">
+				<uni-title type="h1" title="修改内容" align="center" style="margin-bottom: 40rpx;"></uni-title>
+				<uni-forms ref="editInfo" :modelValue="editFormData">
+					<uni-forms-item label="ID" name="id">
 						<uni-easyinput type="text" v-model="editFormData.id" />
 					</uni-forms-item>
-					<uni-forms-item label="封面" name="name">
-						<uni-easyinput type="text" v-model="editFormData.cover" disabled />
-						<uni-file-picker v-model="coverUploadUrl" limit="1" fileMediatype="image" mode="grid" @success="uploadCover" />
+					<uni-forms-item label="封面">
+						<uni-file-picker v-model="coverUploadUrl" limit="1" fileMediatype="image" mode="grid"
+							@success="uploadCover" />
 					</uni-forms-item>
-					<uni-forms-item label="作者" name="name">
+					<uni-forms-item label="作者" name="author">
 						<uni-easyinput type="text" v-model="editFormData.author" />
 					</uni-forms-item>
-					<uni-forms-item label="名称" name="name">
+					<uni-forms-item label="名称" name="title">
 						<uni-easyinput type="text" v-model="editFormData.title" />
 					</uni-forms-item>
 				</uni-forms>
-				<button size="mini" type="primary">修改信息</button>
+				<view class="button-box">
+					<button size="mini" type="primary" @click="submitEdit">修改信息</button>
+				</view>
 			</view>
 		</uni-popup>
 	</view>
@@ -86,20 +89,49 @@
 				total: 0,
 				loading: false,
 				editFormData: {},
-				coverUploadUrl:'',
+				coverUploadUrl: {
+					url: ''
+				},
 			}
 		},
 		mounted() {
 			this.getList()
 		},
 		methods: {
+			// 打开编辑内容弹窗
+			toEditContent(item) {
+				uni.navigateTo({
+					url:"/pages/book/content?id="+item.id
+				})
+			},
+			// 确认修改
+			submitEdit() {
+				this.$refs.editInfo.validate().then(res => {
+					this.$request('editBookInfo', this.editFormData, {
+						functionName: 'edit'
+					}).then(res => {
+						console.log(res);
+						if (res.code == 200) {
+							this.editFormData = {}
+							this.$refs.editPop.close()
+							this.getList()
+						}
+					})
+				}).catch(err => {
+					console.log('表单错误信息：', err);
+				})
+			},
 			// 上传封面图
-			uploadCover(e){
-				this.editFormData.cover = e.tempFilePaths[0]
+			uploadCover(e) {
+				console.log(e.tempFilePaths[0])
+				this.editFormData.cover = JSON.parse(JSON.stringify(e.tempFilePaths[0]))
 			},
 			// 打开编辑弹窗
 			openEditPop(item) {
-				this.editFormData = item
+				this.editFormData = JSON.parse(JSON.stringify(item))
+				this.coverUploadUrl = {
+					url: item.cover
+				}
 				this.$refs.editPop.open()
 			},
 			// 多选处理
@@ -112,10 +144,15 @@
 				this.selectedIndexs = e.detail.index
 			},
 			getList() {
+				uni.showLoading({
+					title: "数据加载中...",
+					mask: true
+				})
 				this.$request('getBookList', '', {
 					functionName: 'get'
 				}).then(res => {
 					this.tableData = res.data
+					uni.hideLoading()
 				})
 			},
 		}
@@ -137,11 +174,20 @@
 	}
 
 	.edit-pop {
-		display: flex;
-		flex-direction: column;
-		align-items: center;
+		width: 1000rpx;
 		padding: 80rpx;
 		background-color: #fff;
 		border-radius: 8rpx;
+
+	}
+
+	.button-box {
+		width: 100%;
+		display: flex;
+		justify-content: flex-end;
+		margin-top: 40rpx;
+		button {
+			margin: 0;
+		}
 	}
 </style>

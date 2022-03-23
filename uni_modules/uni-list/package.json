@@ -1,15 +1,15 @@
 {
-  "id": "uni-badge",
-  "displayName": "uni-badge 数字角标",
+  "id": "uni-list",
+  "displayName": "uni-list 列表",
   "version": "1.2.0",
-  "description": "数字角标（徽章）组件，在元素周围展示消息提醒，一般用于列表、九宫格、按钮等地方。",
+  "description": "List 组件 ，帮助使用者快速构建列表。",
   "keywords": [
     "",
-    "badge",
     "uni-ui",
     "uniui",
-    "数字角标",
-    "徽章"
+    "列表",
+    "",
+    "list"
 ],
   "repository": "https://github.com/dcloudio/uni-ui",
   "engines": {
@@ -42,7 +42,10 @@
     "npmurl": "https://www.npmjs.com/package/@dcloudio/uni-ui"
   },
   "uni_modules": {
-    "dependencies": [],
+    "dependencies": [
+      "uni-badge",
+      "uni-icons"
+    ],
     "encrypt": [],
     "platforms": {
       "cloud": {
@@ -75,8 +78,8 @@
           "QQ": "y"
         },
         "快应用": {
-          "华为": "y",
-          "联盟": "y"
+          "华为": "u",
+          "联盟": "u"
         },
         "Vue": {
             "vue2": "y",

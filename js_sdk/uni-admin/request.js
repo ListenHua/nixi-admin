@@ -43,7 +43,7 @@ export function request(action, params, {
 		if (!result) {
 			return Promise.resolve(result)
 		}
-		if (result.code) {
+		if (result.code>300) {
 			reLaunchToLogin(result.code)
 			// const err = new Error(result.message)
 			// err.code = result.code

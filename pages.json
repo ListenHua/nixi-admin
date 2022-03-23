@@ -30,6 +30,16 @@
             }
             
         }
+        ,{
+            "path" : "pages/book/content",
+            "style" :                                                                                    
+            {
+                "navigationBarTitleText": "编辑内容",
+                "enablePullDownRefresh": false,
+				"navigationStyle": "default"
+            }
+            
+        }
     ],
 	"subPackages": [{
 		"root": "pages/system",
