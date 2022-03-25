@@ -9,7 +9,8 @@
 					:placeholder="$t('common.placeholder.query')" />
 				<button class="uni-button" type="default" size="mini"
 					@click="search">{{$t('common.button.search')}}</button>
-				<button class="uni-button" type="primary" size="mini">{{$t('common.button.add')}}</button>
+				<button class="uni-button" type="primary" size="mini"
+					@click="addNewBook">{{$t('common.button.add')}}</button>
 				<button class="uni-button" type="warn" size="mini"
 					@click="delTable">{{$t('common.button.batchDelete')}}</button>
 			</view>
@@ -49,12 +50,19 @@
 					@change="change" />
 			</view>
 		</view>
-		<uni-popup ref="editPop" type="center">
+		<uni-popup ref="editPop" type="center" :maskClick="false">
 			<view class="edit-pop">
-				<uni-title type="h1" title="修改内容" align="center" style="margin-bottom: 40rpx;"></uni-title>
-				<uni-forms ref="editInfo" :modelValue="editFormData">
+				<uni-title type="h1" :title="popStatus=='add'?'新增':'编辑'" align="center" style="margin-bottom: 40rpx;">
+				</uni-title>
+				<uni-forms ref="editInfo" :modelValue="editFormData" :rules="rules">
 					<uni-forms-item label="ID" name="id">
 						<uni-easyinput type="text" v-model="editFormData.id" />
+					</uni-forms-item>
+					<uni-forms-item label="类型" name="type">
+						<uni-data-checkbox mode="tag" v-model="editFormData.type" :localdata="sex"></uni-data-checkbox>
+					</uni-forms-item>
+					<uni-forms-item label="来源" name="origin">
+						<uni-easyinput type="text" v-model="editFormData.origin" />
 					</uni-forms-item>
 					<uni-forms-item label="封面">
 						<uni-file-picker v-model="coverUploadUrl" limit="1" fileMediatype="image" mode="grid"
@@ -68,7 +76,9 @@
 					</uni-forms-item>
 				</uni-forms>
 				<view class="button-box">
-					<button size="mini" type="primary" @click="submitEdit">修改信息</button>
+					<button v-show="popStatus=='add'" size="mini" type="primary" @click="submitadd">新增书籍</button>
+					<button v-show="popStatus=='edit'" size="mini" type="primary" @click="submitEdit">修改信息</button>
+					<button size="mini" type="default" @click="closeEditPop">取消</button>
 				</view>
 			</view>
 		</uni-popup>
@@ -89,30 +99,114 @@
 				total: 0,
 				loading: false,
 				editFormData: {},
-				coverUploadUrl: {
-					url: ''
-				},
+				coverUploadUrl: {},
+				sex: [{
+					text: '普通',
+					value: 0
+				}, {
+					text: '热门',
+					value: 1
+				}, {
+					text: '推荐',
+					value: 2
+				}],
+				popStatus: '',
+				rules: {
+					id: {
+						rules: [{
+							required: true,
+							errorMessage: '请输入书籍ID',
+						}]
+					},
+					author: {
+						rules: [{
+								required: true,
+								errorMessage: '请输入作者姓名',
+							}
+						]
+					},
+					title: {
+						rules: [{
+								required: true,
+								errorMessage: '请输入书籍标题',
+							}
+						]
+					},
+				}
 			}
 		},
 		mounted() {
 			this.getList()
+			this.initEditFormData()
 		},
 		methods: {
+			// 关闭编辑弹窗
+			closeEditPop(){
+				this.$refs.editPop.close()
+			},
+			// 新增书籍
+			submitadd() {
+				if(this.editFormData.cover==''){
+					uni.showToast({
+						title:"请上传封面图",
+						icon:"none"
+					})
+					return
+				}
+				this.$refs.editInfo.validate().then(res => {
+					this.$request('addBookInfo', this.editFormData, {
+						functionName: 'add'
+					}).then(res => {
+						if (res.code == 200) {
+							this.initEditFormData()
+							this.$refs.editPop.close()
+							this.getList()
+						}
+					})
+				}).catch(err => {
+					console.log('表单错误信息：', err);
+				})
+			},
+			// 打开新增书籍弹窗
+			addNewBook() {
+				this.popStatus = 'add'
+				this.initEditFormData()
+				this.$refs.editPop.open()
+			},
+			// 初始化表格数据
+			initEditFormData() {
+				this.editFormData = {
+					id: "",
+					cover: "",
+					author: "",
+					title: "",
+					type: 0,
+					origin: "",
+				}
+				this.coverUploadUrl = {}
+			},
 			// 打开编辑内容弹窗
 			toEditContent(item) {
 				uni.navigateTo({
-					url:"/pages/book/content?id="+item.id
+					url: "/pages/book/content?id=" + item.id
 				})
 			},
 			// 确认修改
 			submitEdit() {
+				if(this.editFormData.cover==''){
+					uni.showToast({
+						title:"请上传封面图",
+						icon:"none"
+					})
+					return
+				}
 				this.$refs.editInfo.validate().then(res => {
 					this.$request('editBookInfo', this.editFormData, {
 						functionName: 'edit'
 					}).then(res => {
 						console.log(res);
 						if (res.code == 200) {
-							this.editFormData = {}
+							this.initEditFormData()
 							this.$refs.editPop.close()
 							this.getList()
 						}
@@ -128,6 +222,7 @@
 			},
 			// 打开编辑弹窗
 			openEditPop(item) {
+				this.popStatus = 'edit'
 				this.editFormData = JSON.parse(JSON.stringify(item))
 				this.coverUploadUrl = {
 					url: item.cover
@@ -186,8 +281,9 @@
 		display: flex;
 		justify-content: flex-end;
 		margin-top: 40rpx;
+
 		button {
-			margin: 0;
+			margin: 0 20rpx;
 		}
 	}
 </style>

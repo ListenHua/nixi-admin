@@ -58,7 +58,7 @@
 				editContent: "",
 				editIndex: "",
 				bookId: '',
-				uploadSuccessFilePath:'',
+				uploadSuccessFilePath: '',
 			}
 		},
 		onLoad(option) {
@@ -66,6 +66,13 @@
 			this.getData()
 		},
 		methods: {
+			// 初始化页面数据
+			initPageData() {
+				this.contentText = {
+					title: "",
+					content: "",
+				}
+			},
 			// 复制内容
 			copyImage() {
 				uni.setClipboardData({
@@ -96,6 +103,8 @@
 			// 关闭编辑弹窗
 			closeEditPop() {
 				this.$refs.contentPop.close()
+				this.initPageData()
+				this.editIndex = ''
 			},
 			// 获取数据
 			getData() {
@@ -153,11 +162,7 @@
 					uni.showToast({
 						title: "修改成功"
 					})
-					this.$refs.contentPop.close()
-					this.contentText = {
-						title: "",
-						content: ""
-					}
+					this.closeEditPop()
 					this.editIndex = ''
 					this.getData()
 				})
