@@ -15,12 +15,17 @@ exports.main = async (event, context) => {
 }
 
 async function getBookList(event) {
+	event = event ? event : {}
 	let limit = event.limit ? event.limit : 15
 	let page = event.page ? event.page - 1 < 0 ? 0 : event.page - 1 : 0
-	let key = event.key ? { title: event.key } : {}
+	let key = event.key ? {
+		title: new RegExp(event.key)
+	} : {}
+	console.log("参数",key,limit,page)
 	let start = page * limit
 	const collection = db.collection('bookList')
 	const res = await collection.where(key).skip(start).limit(limit).get()
+	console.log("???",res)
 	let result = res.data.map(val => {
 		delete val.list
 		return val
