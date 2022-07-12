@@ -39,7 +39,7 @@
 			</view>
 			<uni-popup class="icon-modal-box" ref="iconPopup" type="center">
 				<view class="icon-modal icon-modal-pc">
-					<Icons :tag="false" :fix-window="false"/>
+					<!-- <Icons :tag="false" :fix-window="false"/> -->
 				</view>
 			</uni-popup>
 		</uni-forms>
@@ -48,7 +48,6 @@
 
 <script>
 	import validator from '@/js_sdk/validator/opendb-admin-menus.js';
-	import Icons from '@/pages/demo/icons/icons.vue'
 	import {
 		mapActions
 	} from 'vuex'
@@ -68,9 +67,6 @@
 	}
 
 	export default {
-		components: {
-			Icons
-		},
 		data() {
 			return {
 				formData: {

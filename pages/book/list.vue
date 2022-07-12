@@ -111,6 +111,7 @@
 					value: 2
 				}],
 				popStatus: '',
+				creater: uni.getStorageSync('lastUsername'),
 				rules: {
 					id: {
 						rules: [{
@@ -118,19 +119,11 @@
 							errorMessage: '请输入书籍ID',
 						}]
 					},
-					author: {
-						rules: [{
-								required: true,
-								errorMessage: '请输入作者姓名',
-							}
-						]
-					},
 					title: {
 						rules: [{
-								required: true,
-								errorMessage: '请输入书籍标题',
-							}
-						]
+							required: true,
+							errorMessage: '请输入书籍标题',
+						}]
 					},
 				}
 			}
@@ -141,15 +134,15 @@
 		},
 		methods: {
 			// 关闭编辑弹窗
-			closeEditPop(){
+			closeEditPop() {
 				this.$refs.editPop.close()
 			},
 			// 新增书籍
 			submitadd() {
-				if(this.editFormData.cover==''){
+				if (this.editFormData.cover == '') {
 					uni.showToast({
-						title:"请上传封面图",
-						icon:"none"
+						title: "请上传封面图",
+						icon: "none"
 					})
 					return
 				}
@@ -179,6 +172,7 @@
 					id: "",
 					cover: "",
 					author: "",
+					creater: this.creater,
 					title: "",
 					type: 0,
 					origin: "",
@@ -193,10 +187,10 @@
 			},
 			// 确认修改
 			submitEdit() {
-				if(this.editFormData.cover==''){
+				if (this.editFormData.cover == '') {
 					uni.showToast({
-						title:"请上传封面图",
-						icon:"none"
+						title: "请上传封面图",
+						icon: "none"
 					})
 					return
 				}
@@ -243,7 +237,9 @@
 					title: "数据加载中...",
 					mask: true
 				})
-				this.$request('getBookList', '', {
+				this.$request('getBookList', {
+					author: this.author == 'admin' ? '' : this.creater
+				}, {
 					functionName: 'get'
 				}).then(res => {
 					this.tableData = res.data

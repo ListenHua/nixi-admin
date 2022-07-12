@@ -40,6 +40,33 @@
             }
             
         }
+        ,{
+            "path" : "pages/topic/list",
+            "style" :                                                                                    
+            {
+                "navigationBarTitleText": "",
+                "enablePullDownRefresh": false
+            }
+            
+        }
+        ,{
+            "path" : "pages/public/about",
+            "style" :                                                                                    
+            {
+                "navigationBarTitleText": "",
+                "enablePullDownRefresh": false
+            }
+            
+        }
+        ,{
+            "path" : "pages/public/version",
+            "style" :                                                                                    
+            {
+                "navigationBarTitleText": "",
+                "enablePullDownRefresh": false
+            }
+            
+        }
     ],
 	"subPackages": [{
 		"root": "pages/system",
@@ -142,26 +169,6 @@
 			"path": "tag/list",
 			"style": {
 				"navigationBarTitleText": "标签管理"
-			}
-		}]
-	}, {
-		"root": "pages/demo",
-		"pages": [{
-			"path": "init/init",
-			"style": {
-				"topWindow": false,
-				"leftWindow": false,
-				"navigationBarTitleText": "创建超级管理员"
-			}
-		}, {
-			"path": "icons/icons",
-			"style": {
-				"navigationBarTitleText": "图标"
-			}
-		}, {
-			"path": "table/table",
-			"style": {
-				"navigationBarTitleText": "表格"
 			}
 		}]
 	}],
