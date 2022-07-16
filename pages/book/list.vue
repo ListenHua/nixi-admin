@@ -20,7 +20,6 @@
 				@selection-change="selectionChange">
 				<uni-tr>
 					<uni-th width="50" align="center">封面</uni-th>
-					<uni-th width="150" align="center">ID</uni-th>
 					<uni-th width="150" align="center">作者</uni-th>
 					<uni-th align="center">书籍</uni-th>
 					<uni-th width="304" align="center">操作</uni-th>
@@ -28,9 +27,6 @@
 				<uni-tr v-for="(item ,index) in tableData" :key="index">
 					<uni-td align="center">
 						<image class="table-cover" :src="item.cover" mode="aspectFill"></image>
-					</uni-td>
-					<uni-td align="center">
-						<view class="name">{{item.id}}</view>
 					</uni-td>
 					<uni-td align="center">{{item.author}}</uni-td>
 					<uni-td align="center">{{item.title}}</uni-td>
@@ -40,7 +36,8 @@
 								@click="openEditPop(item)">{{$t('common.button.edit')}}</button>
 							<button class="uni-button" size="mini" type="primary"
 								@click="toEditContent(item)">编辑内容</button>
-							<button class="uni-button" size="mini" type="warn">{{$t('common.button.delete')}}</button>
+							<button class="uni-button" size="mini" type="warn"
+								@click="deleteBook(item)">{{$t('common.button.delete')}}</button>
 						</view>
 					</uni-td>
 				</uni-tr>
@@ -55,9 +52,6 @@
 				<uni-title type="h1" :title="popStatus=='add'?'新增':'编辑'" align="center" style="margin-bottom: 40rpx;">
 				</uni-title>
 				<uni-forms ref="editInfo" :modelValue="editFormData" :rules="rules">
-					<uni-forms-item label="ID" name="id">
-						<uni-easyinput type="text" v-model="editFormData.id" />
-					</uni-forms-item>
 					<uni-forms-item label="类型" name="type">
 						<uni-data-checkbox mode="tag" v-model="editFormData.type" :localdata="sex"></uni-data-checkbox>
 					</uni-forms-item>
@@ -113,12 +107,6 @@
 				popStatus: '',
 				creater: uni.getStorageSync('lastUsername'),
 				rules: {
-					id: {
-						rules: [{
-							required: true,
-							errorMessage: '请输入书籍ID',
-						}]
-					},
 					title: {
 						rules: [{
 							required: true,
@@ -169,7 +157,6 @@
 			// 初始化表格数据
 			initEditFormData() {
 				this.editFormData = {
-					id: "",
 					cover: "",
 					author: "",
 					creater: this.creater,
@@ -209,6 +196,34 @@
 					console.log('表单错误信息：', err);
 				})
 			},
+			// 删除书籍
+			deleteBook(item) {
+				uni.showModal({
+					title: "提示",
+					content: "是否要删除该资料库?",
+					success: res => {
+						this.$request('book', item, {
+							functionName: 'remove'
+						}).then(res => {
+							if (res.code == 200) {
+								uni.showToast({
+									title: "删除成功!如果误删请联系管理员",
+									duration: 1500,
+									icon: "none",
+									mask: true
+								})
+								setTimeout(() => {
+									this.initEditFormData()
+									this.$refs.editPop.close()
+									this.getList()
+								}, 1500)
+							}
+						}).catch(err => {
+							console.log('表单错误信息：', err);
+						})
+					}
+				})
+			},
 			// 上传封面图
 			uploadCover(e) {
 				console.log(e.tempFilePaths[0])
@@ -238,7 +253,7 @@
 					mask: true
 				})
 				this.$request('getBookList', {
-					author: this.author == 'admin' ? '' : this.creater
+					creater: this.creater == 'admin' ? '' : this.creater
 				}, {
 					functionName: 'get'
 				}).then(res => {

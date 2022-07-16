@@ -11,20 +11,11 @@ export default {
 	navBar: { // 顶部导航
 		logo: '/static/logo.png', // 左侧 Logo
 		links: [{
-			text: '中文简体',
+			text: '中文',
 			lang: 'zh-Hans'
 		}, {
-			text: '中文繁體',
-			lang: 'zh-Hant'
-		}, {
-			text: 'English',
+			text: 'En',
 			lang: 'en'
-		}, { // 右侧链接
-			text: 'topwindow.text.doc',
-			url: 'https://uniapp.dcloud.net.cn/uniCloud/admin'
-		}, {
-			text: 'topwindow.text.plugin',
-			url: 'https://ext.dcloud.net.cn/?cat1=7&cat2=74'
 		}],
 		debug: {
 			enable: process.env.NODE_ENV !== 'production', //是否显示错误信息

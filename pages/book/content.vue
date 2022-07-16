@@ -31,7 +31,7 @@
 					<button size="mini" type="primary" @click="copyImage">复制</button>
 					<button size="mini" type="primary" @click="uploadImage">上传图片</button>
 				</view>
-				<view id="editor"></view>
+				<div id="editor"></div>
 				<view class="button-box">
 					<button size="mini" type="primary" @click="addBookContent">确定</button>
 					<button size="mini" type="default" @click="closeEditPop">取消编辑</button>
@@ -42,7 +42,7 @@
 </template>
 
 <script>
-	import wangeditor from 'wangeditor';
+	import wangeditor from '@/uni_modules/wangeditor'
 
 	export default {
 		data() {
@@ -53,6 +53,10 @@
 				contentText: {
 					title: "",
 					content: "",
+				},
+				editorConfig:{
+					showLinkImgAlt:false,
+					showLinkImgHref:false
 				},
 				editStatus: "",
 				editContent: "",
@@ -167,6 +171,9 @@
 					this.getData()
 				})
 			},
+			onCreated(editor){
+				this.contentEditor = Object.seal(editor)
+			},
 			// 打开编辑器弹窗
 			openEditContentPop(item, index) {
 				let that = this
@@ -186,8 +193,8 @@
 					this.contentEditor.config.showLinkImgHref = false
 					this.contentEditor.create()
 					if (this.editStatus == 'edit') {
-						this.contentEditor.txt.html(item.content)
 						this.contentText.title = item.title
+						this.contentEditor.txt.html(item.content)
 					}
 				})
 			},

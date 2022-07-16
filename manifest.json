@@ -1,5 +1,5 @@
 {
-    "name" : "nixi-admin",
+    "name" : "匿习管理系统",
     "appid" : "__UNI__2E1FDBC",
     "description" : "",
     "versionName" : "1.0.0",
@@ -64,7 +64,8 @@
         "template" : "template.h5.html",
         "router" : {
             "base" : "/admin/"
-        }
+        },
+        "title" : "匿习管理系统"
     },
     "vueVersion" : "2"
 }

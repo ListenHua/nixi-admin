@@ -48,7 +48,8 @@
 						<view class="uni-group">
 							<button class="uni-button" size="mini" type="primary"
 								@click="openEditPop(item)">{{$t('common.button.edit')}}</button>
-							<button class="uni-button" size="mini" type="warn">{{$t('common.button.delete')}}</button>
+							<button class="uni-button" size="mini" type="warn"
+								@click="deleteTopic(item)">{{$t('common.button.delete')}}</button>
 						</view>
 					</uni-td>
 				</uni-tr>
@@ -67,7 +68,7 @@
 						<view class="content-text">
 							<view>{{editFormData.title}}</view>
 							<button class="uni-button" size="mini" type="primary"
-								@click="openEditContentPop(editFormData.title,-1)">编辑内容</button>
+								@click="openEditContentPop(editFormData.title,-1)">编辑标题</button>
 						</view>
 					</uni-forms-item>
 					<uni-forms-item label="类型" name="type">
@@ -142,13 +143,14 @@
 
 <script>
 	import LParse from '@/components/li-parse/parse'
-	import wangeditor from 'wangeditor';
+	import wangeditor from '@/uni_modules/wangeditor'
 	export default {
 		components: {
 			LParse
 		},
 		data() {
 			return {
+				creater: uni.getStorageSync('lastUsername'),
 				searchVal: '',
 				tableData: [],
 				// 每页数据量
@@ -170,7 +172,7 @@
 					text: '问答题',
 					value: 2
 				}],
-				levelOption:[{
+				levelOption: [{
 					text: '初级',
 					value: 0,
 				}, {
@@ -221,6 +223,7 @@
 			},
 			// 打开编辑器弹窗
 			openEditContentPop(item, index) {
+				console.log("item", item)
 				let that = this
 				this.editIndex = index
 				this.$refs.contentPop.open()
@@ -229,9 +232,7 @@
 					this.contentEditor.config.showLinkImgAlt = false
 					this.contentEditor.config.showLinkImgHref = false
 					this.contentEditor.create()
-					if (this.editStatus == 'edit') {
-						this.contentEditor.txt.html(item)
-					}
+					this.contentEditor.txt.html(item)
 				})
 			},
 			// 返回富文本框结果
@@ -307,6 +308,36 @@
 					console.log('表单错误信息：', err);
 				})
 			},
+
+			// 删除题目
+			deleteTopic(item) {
+				uni.showModal({
+					title: "提示",
+					content: "是否要删除该题目?",
+					success: res => {
+						this.$request('topic', item, {
+							functionName: 'remove'
+						}).then(res => {
+							if (res.code == 200) {
+								uni.showToast({
+									title: "删除成功!如果误删请联系管理员",
+									duration: 1500,
+									icon: "none",
+									mask: true
+								})
+								setTimeout(() => {
+									this.initEditFormData()
+									this.$refs.editPop.close()
+									this.getList()
+								}, 1500)
+							}
+						}).catch(err => {
+							console.log('表单错误信息：', err);
+						})
+					}
+				})
+
+			},
 			// 打开新增书籍弹窗
 			addNewTopic() {
 				this.popStatus = 'add'
@@ -319,8 +350,9 @@
 					title: "",
 					type: 0,
 					author: "",
+					creater: this.creater,
 					label: "",
-					level:0,
+					level: 0,
 					option: [{
 						content: ''
 					}],
@@ -336,7 +368,7 @@
 			},
 			// 确认修改
 			submitEdit() {
-				
+
 			},
 			// 打开编辑弹窗
 			openEditPop(item) {
@@ -361,7 +393,9 @@
 					title: "数据加载中...",
 					mask: true
 				})
-				this.$request('getTopicList', '', {
+				this.$request('getTopicList', {
+					creater: this.creater == 'admin' ? '' : this.creater
+				}, {
 					functionName: 'get'
 				}).then(res => {
 					this.tableData = res.data

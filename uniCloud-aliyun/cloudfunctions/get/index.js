@@ -51,10 +51,18 @@ async function getTopicList(event) {
 	event = event ? event : {}
 	let limit = event.limit ? event.limit : 15
 	let page = event.page ? event.page - 1 < 0 ? 0 : event.page - 1 : 0
-	let key = {
-		label: new RegExp(event.label),
-		title: new RegExp(event.title),
-		level: event.level
+	let key = {}
+	if (event.label) {
+		key.title = new RegExp(event.label)
+	}
+	if(event.title){
+		key.title = new RegExp(event.title)
+	}
+	if(event.level){
+		key.level = event.level
+	}
+	if(event.creater){
+		key.creater = event.creater
 	}
 	let start = page * limit
 	let res;
@@ -80,11 +88,13 @@ async function getBookList(event) {
 	event = event ? event : {}
 	let limit = event.limit ? event.limit : 15
 	let page = event.page ? event.page - 1 < 0 ? 0 : event.page - 1 : 0
-	let key = event.key ? {
-		title: new RegExp(event.key)
-	} : event.creater ? {
-		creater: new RegExp(event.creater)
-	} : {}
+	let key = {}
+	if (event.key) {
+		key.title = new RegExp(event.key)
+	}
+	if(event.creater){
+		key.creater = new RegExp(event.creater)
+	}
 	let start = page * limit
 	const collection = db.collection('bookList')
 	let res
@@ -98,6 +108,7 @@ async function getBookList(event) {
 	}
 	let result = res.data.map(val => {
 		delete val.list
+		val.id = val._id
 		return val
 	})
 
@@ -112,7 +123,7 @@ async function getBookContent(event) {
 	if (event.id) {
 		const collection = db.collection('bookList')
 		const res = await collection.where({
-			id: event.id,
+			_id: event.id,
 		}).get()
 		if (res.data.length == 0) {
 			return {

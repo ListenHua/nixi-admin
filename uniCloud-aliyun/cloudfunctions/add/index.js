@@ -42,6 +42,7 @@ async function addTopic(event) {
 		option,
 		answer,
 		level,
+		creater,
 	} = event
 	const collection = db.collection('topicList')
 	let res = await collection.add({
@@ -50,6 +51,7 @@ async function addTopic(event) {
 		label,
 		option,
 		answer,
+		creater,
 		level,
 	})
 	return {
@@ -60,7 +62,6 @@ async function addTopic(event) {
 
 async function addBookInfo(event) {
 	let {
-		id,
 		cover,
 		author,
 		creater,
@@ -70,7 +71,6 @@ async function addBookInfo(event) {
 	} = event
 	const collection = db.collection('bookList')
 	let res = await collection.add({
-		id,
 		cover,
 		author,
 		creater,

@@ -93,7 +93,6 @@
 		}
 	},
 	"dependencies": {
-		"element-ui": "^2.15.6",
-		"wangeditor": "^4.7.15"
+		
 	}
 }

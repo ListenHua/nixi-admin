@@ -42,7 +42,7 @@
 </template>
 
 <script>
-	import wangeditor from 'wangeditor';
+	import wangeditor from '@/uni_modules/wangeditor'
 
 	export default {
 		data() {
