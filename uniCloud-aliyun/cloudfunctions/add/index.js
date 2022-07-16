@@ -41,6 +41,7 @@ async function addTopic(event) {
 		label,
 		option,
 		answer,
+		level,
 	} = event
 	const collection = db.collection('topicList')
 	let res = await collection.add({
@@ -49,6 +50,7 @@ async function addTopic(event) {
 		label,
 		option,
 		answer,
+		level,
 	})
 	return {
 		code: 200,

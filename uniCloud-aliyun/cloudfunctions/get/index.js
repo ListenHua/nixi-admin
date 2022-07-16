@@ -51,11 +51,11 @@ async function getTopicList(event) {
 	event = event ? event : {}
 	let limit = event.limit ? event.limit : 15
 	let page = event.page ? event.page - 1 < 0 ? 0 : event.page - 1 : 0
-	let key = event.label ? {
-		label: new RegExp(event.label)
-	} : event.title ? {
-		title: new RegExp(event.title)
-	} : {}
+	let key = {
+		label: new RegExp(event.label),
+		title: new RegExp(event.title),
+		level: event.level
+	}
 	let start = page * limit
 	let res;
 	const collection = db.collection('topicList')

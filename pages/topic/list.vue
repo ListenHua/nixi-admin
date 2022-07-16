@@ -19,6 +19,7 @@
 				<uni-tr>
 					<uni-th width="300" align="center">题目</uni-th>
 					<uni-th width="80" align="center">类型</uni-th>
+					<uni-th align="center">等级</uni-th>
 					<uni-th align="center">标签</uni-th>
 					<uni-th align="center">选项</uni-th>
 					<uni-th align="center">答案</uni-th>
@@ -27,11 +28,13 @@
 				<uni-tr v-for="(item ,index) in tableData" :key="index">
 					<uni-td align="center">
 						<!-- <view class="name">{{item.title}}</view> -->
-						<l-parse :content="item.title"></l-parse>
+						<!-- <l-parse :content="item.title"></l-parse> -->
+						<button class="uni-button" size="mini" type="primary">查看题目</button>
 					</uni-td>
 					<uni-td align="center">
 						<view class="name">{{item.type===0?'多选':item.type===1?'单选':'问答题'}}</view>
 					</uni-td>
+					<uni-td align="center">{{item.level===0?'初级':item.level===1?'中级':'高级'}}</uni-td>
 					<uni-td align="center">{{item.label}}</uni-td>
 					<uni-td align="center">
 						<view v-if="item.type===2" class="name">-</view>
@@ -69,6 +72,10 @@
 					</uni-forms-item>
 					<uni-forms-item label="类型" name="type">
 						<uni-data-checkbox mode="tag" v-model="editFormData.type" :localdata="typeOption">
+						</uni-data-checkbox>
+					</uni-forms-item>
+					<uni-forms-item label="等级" name="level">
+						<uni-data-checkbox mode="tag" v-model="editFormData.level" :localdata="levelOption">
 						</uni-data-checkbox>
 					</uni-forms-item>
 					<uni-forms-item label="标签" name="label">
@@ -118,6 +125,10 @@
 				</view>
 			</view>
 		</uni-popup>
+		<!-- 查看标题弹窗 -->
+		<uni-popup ref="titlePop" type="center">
+
+		</uni-popup>
 		<!-- 查看选项弹窗 -->
 		<uni-popup ref="optionPop" type="center">
 
@@ -158,6 +169,16 @@
 				}, {
 					text: '问答题',
 					value: 2
+				}],
+				levelOption:[{
+					text: '初级',
+					value: 0,
+				}, {
+					text: '中级',
+					value: 1,
+				}, {
+					text: '高级',
+					value: 2,
 				}],
 				popStatus: '',
 				rules: {
@@ -299,6 +320,7 @@
 					type: 0,
 					author: "",
 					label: "",
+					level:0,
 					option: [{
 						content: ''
 					}],
