@@ -48,13 +48,12 @@ async function getVersion(event) {
 }
 
 async function getTopicList(event) {
+	console.log("event----",event)
+	let cmd = db.command
 	event = event ? event : {}
 	let limit = event.limit ? event.limit : 15
 	let page = event.page ? event.page - 1 < 0 ? 0 : event.page - 1 : 0
 	let key = {}
-	if (event.label) {
-		key.title = new RegExp(event.label)
-	}
 	if(event.title){
 		key.title = new RegExp(event.title)
 	}
@@ -63,6 +62,14 @@ async function getTopicList(event) {
 	}
 	if(event.creater){
 		key.creater = event.creater
+	}
+	if (event.label) {
+		let ary = []
+		event.label.forEach(item=>{
+			ary.push(cmd.eq(item))
+		})
+		key.label = cmd.and(ary)
+		// key.label = cmd.in(event.label)
 	}
 	let start = page * limit
 	let res;

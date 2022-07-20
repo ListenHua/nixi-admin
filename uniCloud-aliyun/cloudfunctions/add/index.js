@@ -48,7 +48,7 @@ async function addTopic(event) {
 	let res = await collection.add({
 		title,
 		type,
-		label,
+		label:label.split(','),
 		option,
 		answer,
 		creater,
