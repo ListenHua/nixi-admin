@@ -4,7 +4,7 @@
 			<image :src="logo" mode="heightFix"></image>
 		</view>
 		<view class="uni-header no-padding">
-			<view class="uni-title">{{$t('login.text.title')}}</view>
+			<view class="login-title">Welcome Nixi</view>
 		</view>
 		<view class="uni-container">
 			<uni-forms ref="form" v-model="formData" :rules="rules" @submit="submit">
@@ -33,7 +33,7 @@
 				</view>
 			</uni-forms>
 			<view class="uni-tips">
-				<text class="uni-tips-text" @click="initAdmin">{{$t('login.text.prompt')}}...</text>
+				<!-- <text class="uni-tips-text" @click="initAdmin">{{$t('login.text.prompt')}}...</text> -->
 			</view>
 		</view>
 	</view>
@@ -253,7 +253,7 @@
 	}
 </script>
 
-<style>
+<style lang="scss">
 	page {
 		width: 100%;
 		height: 100%;
@@ -261,7 +261,10 @@
 		justify-content: center;
 		background-color: #fff;
 	}
-
+	.login-title{
+		@include set-font(34rpx,#000,bold);
+		@include margin(0 auto)
+	}
 	.login-box {
 		position: relative;
 		max-width: 350px;
@@ -302,7 +305,9 @@
 	}
 
 	.admin-logo image {
-		height: 40px;
+		height: 60px;
+		border-radius: 50%;
+		@include set-shadow(6rpx 6rpx 16rpx rgba(0,0,0,0.1))
 	}
 
 	.admin-captcha-img {

@@ -2,22 +2,21 @@
 	<view>
 		<view class="uni-header">
 			<view class="uni-group hide-on-phone">
-				<view class="uni-title">{{$t('demo.table.title')}}</view>
+				<view class="uni-title">资料列表</view>
 			</view>
 			<view class="uni-group">
-				<input class="uni-search" type="text" v-model="searchVal" @confirm="search"
+				<!-- <input class="uni-search" type="text" v-model="searchVal" @confirm="search"
 					:placeholder="$t('common.placeholder.query')" />
 				<button class="uni-button" type="default" size="mini"
-					@click="search">{{$t('common.button.search')}}</button>
+					@click="search">{{$t('common.button.search')}}</button> -->
 				<button class="uni-button" type="primary" size="mini"
 					@click="addNewBook">{{$t('common.button.add')}}</button>
-				<button class="uni-button" type="warn" size="mini"
-					@click="delTable">{{$t('common.button.batchDelete')}}</button>
+				<!-- <button class="uni-button" type="warn" size="mini"
+					@click="delTable">{{$t('common.button.batchDelete')}}</button> -->
 			</view>
 		</view>
 		<view class="uni-container">
-			<uni-table :loading="loading" border stripe type="selection" :emptyText="$t('common.empty')"
-				@selection-change="selectionChange">
+			<uni-table :loading="loading" border stripe :emptyText="$t('common.empty')">
 				<uni-tr>
 					<uni-th width="50" align="center">封面</uni-th>
 					<uni-th width="150" align="center">作者</uni-th>
@@ -44,7 +43,7 @@
 			</uni-table>
 			<view class="uni-pagination-box">
 				<uni-pagination show-icon :page-size="pageSize" :current="pageCurrent" :total="total"
-					@change="change" />
+					@change="pageChange" />
 			</view>
 		</view>
 		<uni-popup ref="editPop" type="center" :maskClick="false">
@@ -121,6 +120,11 @@
 			this.initEditFormData()
 		},
 		methods: {
+			// 切换上下页
+			pageChange(e){
+				this.pageCurrent = e.current
+				this.getList()
+			},
 			// 关闭编辑弹窗
 			closeEditPop() {
 				this.$refs.editPop.close()
@@ -253,10 +257,13 @@
 					mask: true
 				})
 				this.$request('getBookList', {
+					page:this.pageCurrent,
+					limit:this.pageSize,
 					creater: this.creater == 'admin' ? '' : this.creater
 				}, {
 					functionName: 'get'
 				}).then(res => {
+					this.total = res.total
 					this.tableData = res.data
 					uni.hideLoading()
 				})

@@ -51,7 +51,8 @@
 	}
 </script>
 
-<style>
+<style lang="scss">
 	@import '@/common/uni.css';
+	@import '@/common/parse.css';
 	@import '@/common/uni-icons.css';
 </style>

@@ -10,13 +10,16 @@ export default {
 	},
 	navBar: { // 顶部导航
 		logo: '/static/logo.png', // 左侧 Logo
-		links: [{
-			text: '中文',
-			lang: 'zh-Hans'
-		}, {
-			text: 'En',
-			lang: 'en'
-		}],
+		links: [
+		// 	{
+		// 	text: '中文',
+		// 	lang: 'zh-Hans'
+		// }, 
+		// {
+		// 	text: 'En',
+		// 	lang: 'en'
+		// },
+		],
 		debug: {
 			enable: process.env.NODE_ENV !== 'production', //是否显示错误信息
 			engine: [{ // 搜索引擎配置（每条错误信息后，会自动生成搜索链接，点击后跳转至搜索引擎）

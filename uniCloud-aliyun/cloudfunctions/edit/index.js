@@ -14,9 +14,38 @@ exports.main = async (event, context) => {
 		case 'editVersion': {
 			return editVersion(event.params)
 		}
+		case 'editTopic': {
+			return editTopic(event.params)
+		}
 		default: {
 			return
 		}
+	}
+}
+
+
+async function editTopic(event) {
+	let {
+		_id,
+		title,
+		type,
+		label,
+		option,
+		answer,
+		level,
+	} = event
+	const collection = db.collection('topicList')
+	let res = await collection.doc(_id).update({
+		title,
+		type,
+		label:label.split(','),
+		option,
+		answer,
+		level,
+	})
+	return {
+		code: 200,
+		message: '修改成功!',
 	}
 }
 

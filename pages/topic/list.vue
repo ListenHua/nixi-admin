@@ -2,20 +2,19 @@
 	<view>
 		<view class="uni-header">
 			<view class="uni-group hide-on-phone">
-				<view class="uni-title">{{$t('demo.table.title')}}</view>
+				<view class="uni-title">题目列表</view>
 			</view>
 			<view class="uni-group">
-				<input class="uni-search" type="text" v-model="searchVal" @confirm="search"
+				<!-- <input class="uni-search" type="text" v-model="searchVal" @confirm="search"
 					:placeholder="$t('common.placeholder.query')" />
 				<button class="uni-button" type="default" size="mini"
-					@click="search">{{$t('common.button.search')}}</button>
+					@click="search">{{$t('common.button.search')}}</button> -->
 				<button class="uni-button" type="primary" size="mini"
 					@click="addNewTopic">{{$t('common.button.add')}}</button>
 			</view>
 		</view>
 		<view class="uni-container">
-			<uni-table :loading="loading" border stripe type="selection" :emptyText="$t('common.empty')"
-				@selection-change="selectionChange">
+			<uni-table :loading="loading" border stripe :emptyText="$t('common.empty')">
 				<uni-tr>
 					<uni-th width="300" align="center">题目</uni-th>
 					<uni-th width="80" align="center">类型</uni-th>
@@ -26,10 +25,10 @@
 					<uni-th align="center">操作</uni-th>
 				</uni-tr>
 				<uni-tr v-for="(item ,index) in tableData" :key="index">
-					<uni-td align="center">
-						<!-- <view class="name">{{item.title}}</view> -->
-						<!-- <l-parse :content="item.title"></l-parse> -->
-						<button class="uni-button" size="mini" type="primary">查看题目</button>
+					<uni-td>
+						<scroll-view scroll-y style="max-height: 300rpx;">
+							<l-parse :content="item.title"></l-parse>
+						</scroll-view>
 					</uni-td>
 					<uni-td align="center">
 						<view class="name">{{item.type===0?'多选':item.type===1?'单选':'问答题'}}</view>
@@ -38,7 +37,8 @@
 					<uni-td align="center">{{item.label}}</uni-td>
 					<uni-td align="center">
 						<view v-if="item.type===2" class="name">-</view>
-						<button v-else class="uni-button" size="mini" type="primary">查看选项</button>
+						<button v-else class="uni-button" size="mini" type="primary"
+							@click="viewOption(item.option)">查看选项</button>
 					</uni-td>
 					<uni-td align="center">
 						<button v-if="item.type===2" class="uni-button" size="mini" type="primary">查看答案</button>
@@ -56,7 +56,7 @@
 			</uni-table>
 			<view class="uni-pagination-box">
 				<uni-pagination show-icon :page-size="pageSize" :current="pageCurrent" :total="total"
-					@change="change" />
+					@change="pageChange" />
 			</view>
 		</view>
 		<uni-popup ref="editPop" type="center" :maskClick="false">
@@ -80,7 +80,12 @@
 						</uni-data-checkbox>
 					</uni-forms-item>
 					<uni-forms-item label="标签" name="label">
-						<uni-easyinput type="text" placeholder="输入标签名称,逗号分隔" v-model="editFormData.label" />
+						<view class="content-text">
+							<uni-easyinput type="text" placeholder="请选择标签" disabled :styles="{disableColor:'#fff'}"
+								v-model="editFormData.label" />
+							<button class="uni-button" size="mini" type="primary"
+								@click="openLabelSelectPop">选择标签</button>
+						</view>
 					</uni-forms-item>
 					<uni-forms-item label="答案" name="answer">
 						<uni-easyinput v-if="editFormData.type==0" type="number" placeholder="请输入答案下标"
@@ -126,17 +131,30 @@
 				</view>
 			</view>
 		</uni-popup>
-		<!-- 查看标题弹窗 -->
-		<uni-popup ref="titlePop" type="center">
-
+		<!-- 选择标签弹窗 -->
+		<uni-popup ref="labelPop" type="center">
+			<view class="label-pop">
+				<view class="content-text">
+					<uni-easyinput type="text" v-model="labelText" />
+					<button size="mini" type="primary" @click="addLabel">添加标签</button>
+				</view>
+				<scroll-view scroll-y="true" style="height: 500rpx;">
+					<view class="label-list">
+						<uni-tag v-for="(item,index) in labelList" size="small" :inverted="!item.check"
+							:text="item.name" type="primary" :style="{'margin-right':'20rpx'}"
+							@click="item.check = !item.check" />
+					</view>
+				</scroll-view>
+				<button size="mini" type="primary" @click="selectLabel">确定</button>
+			</view>
 		</uni-popup>
 		<!-- 查看选项弹窗 -->
 		<uni-popup ref="optionPop" type="center">
-
-		</uni-popup>
-		<!-- 查看答案弹窗 -->
-		<uni-popup ref="answerPop" type="center">
-
+			<view class="option-pop">
+				<view class="option-block" v-for="(item,index) in optionList">
+					<l-parse :content="item.content"></l-parse>
+				</view>
+			</view>
 		</uni-popup>
 	</view>
 </template>
@@ -151,10 +169,13 @@
 		data() {
 			return {
 				creater: uni.getStorageSync('lastUsername'),
+				labelText: '',
+				labelList: [],
 				searchVal: '',
 				tableData: [],
+				optionList: [],
 				// 每页数据量
-				pageSize: 10,
+				pageSize: 15,
 				// 当前页
 				pageCurrent: 1,
 				// 数据总量
@@ -209,8 +230,86 @@
 		mounted() {
 			this.getList()
 			this.initEditFormData()
+			this.getLabelList()
 		},
 		methods: {
+			// 查看选项
+			viewOption(data) {
+				this.optionList = data
+				this.$refs.optionPop.open()
+			},
+			// 上下页切换
+			pageChange(e) {
+				this.pageCurrent = e.current
+				this.getList()
+			},
+			// 确定选择标签
+			selectLabel() {
+				let ary = []
+				this.labelList.forEach(item => {
+					if (item.check) {
+						ary.push(item.name)
+					}
+				})
+				this.editFormData.label = ary.join(',')
+				this.$refs.labelPop.close()
+			},
+			// 添加标签
+			addLabel() {
+				let label = this.labelList.map(item => {
+					return item.name
+				})
+
+				if (label.includes(this.labelText)) {
+					uni.showToast({
+						title: "该标签已存在",
+						icon: "none"
+					})
+					return
+				}
+				this.$request('addLabel', {
+					name: this.labelText
+				}, {
+					functionName: 'add'
+				}).then(res => {
+					console.log("res,success----", res)
+					if (res.code == 200) {
+						uni.showToast({
+							title: "新增成功"
+						})
+						this.labelText = ''
+						this.getLabelList()
+					}
+				})
+			},
+			// 获取标签列表
+			getLabelList() {
+				this.$request('getLabelList', '', {
+					functionName: 'get'
+				}).then(res => {
+					if (res.code == 200) {
+						let list = res.data
+						this.labelList = list.map(item => {
+							item.check = false
+							return item
+						})
+						this.checkMySelectLabel()
+					}
+				})
+			},
+			// 检测我已选中的标签
+			checkMySelectLabel() {
+				let list = this.labelList
+				let select = this.editFormData.label.split(',')
+				list.map(item => {
+					item.check = select.includes(item.name)
+				})
+			},
+			// 打开标签选择弹窗
+			openLabelSelectPop() {
+				this.$refs.labelPop.open()
+				this.checkMySelectLabel()
+			},
 			// 删除选项
 			deleteOption(index) {
 				this.editFormData.option.splice(index, 1)
@@ -286,6 +385,27 @@
 					this.$refs.contentPop.close()
 					this.editIndex = ''
 				}
+			},
+			// 确认修改
+			submitEdit() {
+				this.$refs.editInfo.validate().then(e => {
+					console.log("res----", this.editFormData)
+					this.$request('editTopic', this.editFormData, {
+							functionName: 'edit'
+						}).then(res => {
+							console.log("res,success----", res)
+							if (res.code == 200) {
+								this.initEditFormData()
+								this.$refs.editPop.close()
+								this.getList()
+							}
+						})
+						.catch(res => {
+							console.log("res,error----", res)
+						})
+				}).catch(err => {
+					console.log('表单错误信息：', err);
+				})
 			},
 			// 新增题目
 			submitadd() {
@@ -366,10 +486,6 @@
 					url: "/pages/book/content?id=" + item.id
 				})
 			},
-			// 确认修改
-			submitEdit() {
-
-			},
 			// 打开编辑弹窗
 			openEditPop(item) {
 				this.popStatus = 'edit'
@@ -394,10 +510,13 @@
 					mask: true
 				})
 				this.$request('getTopicList', {
+					page: this.pageCurrent,
+					limit: this.pageSize,
 					creater: this.creater == 'admin' ? '' : this.creater
 				}, {
 					functionName: 'get'
 				}).then(res => {
+					this.total = res.total
 					this.tableData = res.data
 					uni.hideLoading()
 				})
@@ -420,13 +539,30 @@
 		margin: 20rpx;
 	}
 
-	.edit-pop {
-		width: 1400rpx;
+	.option-pop {
+		width: 1000rpx;
 		padding: 80rpx;
 		background-color: #fff;
 		border-radius: 8rpx;
 		max-height: 500px;
-		overflow: scroll;
+		overflow-y: scroll;
+		overflow-x: hidden;
+		.option-block{
+			background-color: #f4f4f4;
+			padding: 20rpx;
+			border-radius: 10rpx;
+			margin-bottom: 10rpx;
+		}
+	}
+
+	.edit-pop {
+		width: 1000rpx;
+		padding: 80rpx;
+		background-color: #fff;
+		border-radius: 8rpx;
+		max-height: 500px;
+		overflow-y: scroll;
+		overflow-x: hidden;
 	}
 
 	.button-box {
@@ -456,6 +592,7 @@
 		}
 
 		button {
+			margin-left: 20rpx;
 			flex-shrink: 0;
 		}
 	}
@@ -485,6 +622,19 @@
 			button {
 				margin: 0 20rpx;
 			}
+		}
+	}
+
+	.label-pop {
+		width: 1000rpx;
+		background-color: #fff;
+		padding: 50rpx;
+		border-radius: 16rpx;
+
+		.label-list {
+			display: flex;
+			flex-wrap: wrap;
+			align-items: center;
 		}
 	}
 </style>

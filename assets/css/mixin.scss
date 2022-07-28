@@ -1,0 +1,487 @@
+// @desc scss集合
+// @author yummy 2021.09.01
+// @version 1.1
+// @desc 内核组1 
+$cores: (
+    '-webkit-',  // Chrome / Safari
+    '-moz-',     // Firefox 
+    '-o-',       // Opera 
+    '-ms-',      // Internet Explorer / Edge 
+    '',          // Non-prefixed version, currently not supported by any browser 
+);
+
+// @desc 内核组2 
+$cores2: (
+    '::-webkit-',  // Chrome / Safari 
+    ':-moz-',      // Firefox 
+    '::-moz-',     // Firefox 
+    '::-ms-',      // Internet Explorer / Edge 
+);
+
+// @desc 定位盒子
+// @param $position [盒子定位类型] 
+// @param $top [顶部偏移量]
+// @param $right [右边界偏移量]
+// @param $bottom [底部偏移量]
+// @param $left [左边界偏移量]
+// @example locat-box(absolute, 10px, null, null, 16px); // 设置距离父元素上方 10px , 左边 16px 的绝对定位盒子
+@mixin locat-box($position, $top: null, $right: null, $bottom: null, $left: null) {
+    position: $position;
+    top: $top;
+    right: $right;
+    bottom: $bottom;
+    left: $left;
+}
+
+// @desc 设置溢出 
+// @param $dir [方向]
+// @param $options [溢出处理]
+// @example set-overflow(); // 设置溢出隐藏
+// @example set-overflow('-y', scroll); // 设置 y 方向上为滚动效果
+@mixin set-overflow($dir: null, $options: hidden) {
+    overflow#{$dir}: $options;
+}
+
+// @desc 堆叠层级映射
+//       key - value 的形式方便项目集中管理 z-index
+$level: (
+    'base-layout': 10,
+    'basic-inner-caption': 15,
+    'basic-side': 20,
+    'basic-head': 25,
+    'cond-panel': 50,
+    'table-dialog': 100,
+);
+
+// @desc 设置堆叠层级 (记得设置 position 属性)
+// @param $name [Z轴上堆叠名称或值]
+// @example set-Z('base-layout'); // 设置 z-index 为 10 ( $level 中 key 对应的 value )
+// @example set-Z(200); // 推荐使用映射统一管理, 不推荐直接设置值
+@mixin set-Z($name) {
+    z-index: if(map-has-key($level, $name), #{map-get($level, $name)}, $name);
+}
+
+// @desc 弹性项目 
+// @param $flex [剩余空间分配]
+// @param $order [项目排序]
+// @param $align [项目在交叉轴上对齐方式]
+// @example flex-item(); // 单独给该项设置即分配弹性盒子剩余空间
+@mixin flex-item($flex: 1, $order: null, $align: null) {
+    flex: $flex;
+    order: $order;
+    align-self: $align;
+}
+
+// @desc 弹性盒子
+// @param $dir [排列方向] row: 横向排列 / column: 纵向排列
+// @param $align [交叉轴对齐方式]
+// @param $justify-content [主轴对齐方式]
+// @param $flex-wrap [换行方式]
+// @param $align-content [多根轴线对齐方式]
+// @example flex-box(row, center); // 水平方向上项目居中的弹性盒子
+@mixin flex-box($dir: row, $align: null, $justify-content: null, $flex-wrap: null, $align-content: null) {
+    display: flex;
+    flex-direction: $dir;
+    align-items: $align;
+    justify-content: $justify-content;
+    flex-wrap: $flex-wrap;
+    align-content: $align-content;
+}
+
+// @desc 设置盒子外边距
+// @param $args 若第一个参数为方向, 则第二个参数为该方向上外边距值 / 否则为直接设置外边距值
+// @example margin(top, 20px); // 上边外边距 20px
+// @example margin(20px); // 四周外边距 20px
+@mixin margin($args...) {
+    @if (type-of(nth($args, 1)) == string) {
+        margin-#{nth($args, 1)}: nth($args, 2);
+    } @else {
+        margin: $args;
+    }
+}
+
+// @desc 设置盒子内边距
+// @param $args 若第一个参数为方向, 则第二个参数为该方向上内边距值 / 否则为直接设置内边距值
+// @example padding(right, 20px); // 右边内边距 20px
+// @example padding(20px); // 四周内边距 20px
+@mixin padding($args...) {
+    @if (type-of(nth($args, 1)) == string) {
+        padding-#{nth($args, 1)}: nth($args, 2);
+    } @else {
+        padding: $args;
+    }
+}
+
+// @desc 盒子模型
+// @param $width [盒子宽度]
+// @param $height [盒子高度]
+// @param $background [盒子背景]
+// @example base-box(100px); // 宽高均为 100px 的盒子
+// @example base-box(60px, 40px, #000); // 宽 60px 高 40px 的黑色盒子
+@mixin base-box($width: null, $height: $width, $background: null) {
+    width: $width;
+    height: $height;
+    background: $background;
+}
+
+// @desc 尺寸限制盒子模型
+// @param $type [尺寸类型] max: 最大 / min: 最小
+// @param $width [限定宽度]
+// @param $height [限定高度]
+// @example limit-box(max, 20px, 20px); // 最大宽度 20px 最大高度 20px 的盒子
+// @example limit-box(min, 20px); // 最小宽度 20px 的盒子
+@mixin limit-box($type, $width: null, $height: null) {
+    #{$type}-width: $width;
+    #{$type}-height: $height;
+}
+
+// @desc 设置背景图
+// @param $url [图片路径]
+// @param $size [图片尺寸比例]
+// @param $position [图片位置]
+// @example background-img(url('~@/assets/images/main/background.png')); // 设置 @/assets/images/main/background.png 为背景图
+@mixin background-img($url, $size: 100% 100%, $position: center) {
+    background-image: $url;
+    background-size: $size;
+    background-position: $position;
+    background-repeat: no-repeat;
+}
+
+// @desc 设置图标 (搭配 base-box 使用)
+// @param $name [@/assets/images/icon/ 目录下的图片名称] // 格式为 icon-.png
+// @param $size [图片尺寸比例]
+// @example base-box(20px);
+//          set-icon('back'); // 设置宽高均为 20px , @/assets/images/icon/icon-back.png 为图片的图标
+@mixin set-icon($name, $size: 100% 100%) {
+    @include background-img(url('https://yjygx-ai-1307148925.cos.ap-guangzhou.myqcloud.com/mini-icon/icon/icon-#{$name}.png'), $size);
+}
+
+// --------------------------------------------------------------------------------------------- 
+ 
+// @desc 设置字体
+// @param $size [字体大小]
+// @param $color [字体颜色]
+// @param $weight [字体粗细]
+// @param $line-height [字体行高]
+// @param $text-align [对齐方式]
+// @example set-font(24px, #000); // 大小为 24px 颜色为黑色的字体
+@mixin set-font($size, $color, $weight: null, $line-height: null, $text-align: null) {
+    font-size: $size;
+    color: $color;
+    font-weight: $weight;
+    line-height: $line-height;
+    text-align: $text-align;
+}
+
+// @desc 渐变色字体
+// @param $gradient-color [字体渐变色]
+// @example linear-text(top, #000, #FFF); // 设置字体颜色为从上到下由黑到白的渐变色
+@mixin gradient-text($dir, $colors) {
+    background-image: -webkit-linear-gradient($dir, $colors); 
+    -webkit-background-clip: text; 
+    -webkit-text-fill-color: transparent; 
+}
+
+// @desc 单行溢出省略
+// @param $width [限定宽度]
+// @example single-line(200px); // 宽度超出 200px 的文字使用 ... 进行省略
+@mixin single-line($width: null) {
+    display: block;
+    overflow: hidden;
+    width: $width;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+// @desc 多行溢出省略
+// @param $lines [行数] 
+// @param $line-height [字体行高]
+// @attention 搭配 set-font 使用
+// @example @include set-font(16px, #FFF);
+//          @include multi-line(3, 24px); // 超出3行的文字使用 ... 进行省略
+@mixin multi-line($lines, $line-height) {
+    overflow: hidden;
+    display: -webkit-box;
+    max-height: $lines  $line-height;
+    line-height: $line-height;
+    -webkit-line-clamp: $lines;
+    -webkit-box-orient: vertical;
+    word-wrap: break-word;
+}
+
+// @desc 输入框占位符(placeholder)样式
+// @param $args [设置字体参数]
+// @attention 在 input 的父级设置该样式
+// @example input-tips(16px, #666); // 设置大小 16px 的灰色输入占位符
+@mixin input-tips($args...) {
+    @each $core in $cores2 {
+        #{$core}input-placeholder {
+            @include set-font($args...);
+        }
+    }
+}
+
+// --------------------------------------------------------------------------------------------- 
+ 
+// @desc 设置盒子边框
+// @param $color [边框颜色]
+// @param $dirs [边框方向(数组)]
+// @param $width [边框宽度]
+// @param $style [边框样式]
+// @example set-border(#333); // 四个方向上都有颜色 #333 宽 1px 的边框
+// @example set-border(#666, left, 2px); // 左边有颜色 #666 宽 2px 的边框
+// @example set-border(#999, (right, bottom)); // 右边以及下方有颜色 #999 宽 1px 的边框
+@mixin set-border($color, $dirs: null, $width: 2upx, $style: solid) {
+    @if ($dirs) {
+        @each $dir in $dirs {
+            border-#{$dir}: $width $style $color;
+        }
+    } @else {
+        border: $width $style $color;
+    }
+}
+
+// @desc 设置圆角半径
+// @param $option [圆角半径值]
+// @param $dir [圆角方向]
+// @example set-radius(20px); // 设置圆角半径 20px
+// @example set-radius(20px 0); // 设置左上以及右下圆角半径 20px
+// @example set-radius(20px, '-top-left-'); // 设置左上圆角半径 20px
+@mixin set-radius($option: 50%, $dir: null) {
+    @if ($dir) {
+        border#{$dir}radius: $option;
+    } @else {
+        border-radius: $option;
+    }
+}
+
+// @desc 设置透明度
+// @param $option [透明值]
+// @example set-opacity(0.5); // 设置半透明
+@mixin set-opacity($option) {
+    opacity: $option;
+    -moz-opacity: $option;
+    -khtml-opacity: $option;
+    // filter: alpha(opacity = $option  100);
+}
+
+// @desc 设置阴影
+// @param $option [阴影参数]
+// @example set-shadow(0 2px 4px 0 rgba(0, 0, 0, 0.4));
+@mixin set-shadow($option...) { 
+    -webkit-box-shadow: $option; 
+    -moz-box-shadow: $option; 
+    -ms-box-shadow: $option; 
+    box-shadow: $option; 
+}
+
+// --------------------------------------------------------------------------------------------- 
+ 
+// @desc 动画  
+// @param $options [动画配置]
+@mixin animation($options) {
+    @each $core in $cores {
+        #{$core}animation: $options;
+    }
+}
+
+// @desc 封装动画  
+// @param $animation-name [动画名称]
+@mixin keyframes($animation-name) {
+    @-webkit-keyframes #{$animation-name} {
+        @content;
+    }
+    @-moz-keyframes #{$animation-name} {
+        @content;
+    }
+    @-o-keyframes #{$animation-name} {
+        @content;
+    }
+    @keyframes #{$animation-name} {
+        @content;
+    }
+}
+
+// 设置动画属性（兼容） 
+@mixin anim-attr($attr, $options) {
+    @each $core in $cores {
+        #{$core}animation-#{$attr}: $options;
+    }
+}
+
+// @desc 过度效果  
+// @param $options [配置]
+@mixin transition($options) {
+    @each $core in $cores {
+        #{$core}transition: $options;
+    }
+}
+
+// @desc 转换  
+// @param $options [配置]
+@mixin transform($options) {
+    @each $core in $cores {
+        #{$core}transform: $options;
+    }
+}
+
+// @desc 转换属性（兼容）
+@mixin transform-attr($attr, $options) {
+    @each $core in $cores {
+        #{$core}transform-#{$attr}: $options;
+    }
+}
+
+// --------------------------------------------------------------------------------------------- 
+ 
+// @desc 绘制多边形 
+@mixin draw-polygon($options) {
+    clip-path: polygon($options);
+};
+
+// @desc 绘制三角箭头 (搭配 base-box 使用)  
+// @param $dir [箭头方向] top: 向上 / right: 向右 / bottom: 向下 / left: 向左
+// @example base-box(20px, 10px, #000);
+//          set-arrow(left); // 宽 20px 高 10px 方向向左的黑色三角箭头
+@mixin set-arrow($dir) {
+    $dirs: (
+        top: (0% 100%, 50% 0%, 100% 100%),
+        right: (0% 0%, 100% 50%, 0% 100%),
+        bottom: (0% 0%, 50% 100%, 100% 0%),
+        left: (100% 0%, 0% 50%, 100% 100%),
+    );
+    @include draw-polygon(map-get($dirs, $dir));
+}
+
+// @desc 四角边框 (搭配 base-box 使用) 
+// @param $dir [边框方向(数组)]
+// @param $size [边框粗细]
+// @param $color [边框颜色]
+// @param $type [边框类型] outer: 外边框 / inner: 内边框
+// @attention 父元素记得设置 position 
+// @attention 搭配 base-box 设置大小
+// @example base-box(16px, 12px);
+//          set-corner((top, left), 2px, #999); // 左上宽 16px 高 12px 粗 2px 的灰色外部角方框
+// @example base-box(20px);
+//          set-corner((right, bottom), 4px, #000, inner); // 右下宽高均为 20px 粗 4px 的黑色内部角方框
+@mixin set-corner($dirs, $size, $color, $type: outer) {
+    @include locat-box(absolute);
+    @each $dir in $dirs {
+        #{$dir}: if($type == outer, -$size, null);
+        @include set-border($color, $dir, $size);
+    }
+}
+
+// @desc 禁止用户选中
+//       搭配颜色设置为灰色可模拟按钮 disabled 效果
+@mixin no-select() { 
+    @each $core in $cores {
+        #{$core}user-select: none;
+    }
+}
+
+// --------------------------------------------------------------------------------------------- 
+
+// @desc 自定义
+//       key: 属性 / value: 默认值
+$attrs: (
+    box-sizing: border-box,
+    display: inline-block,
+    cursor: pointer,
+    pointer-events: none,
+    white-space: nowrap,
+    column-count: 2,
+    break-inside: avoid,
+);
+
+// @desc 自定义混入
+// @param $attr [属性]
+// @param $option [设定值]
+// @example set(cursor); // 设置光标指针为 $attrs 中对应默认值 pointer
+// @example set(display, block); // 设置 display 为 block
+@mixin set($attr, $option: null) {
+    @if (map-has-key($attrs, $attr)) {
+        #{$attr}: if($option, $option, map-get($attrs, $attr));
+    }
+}
+
+// ---------------------------------------------------------------------------------------------
+
+// @desc 生成范围随机数
+// @param $max [最大值]
+// @param $min [最小值]
+// @param $rate [比率]
+@function random-num($max, $min: 0, $rate: 1) {
+	@return ($min + random($max)) * $rate;
+}
+
+// @desc 随机颜色
+// @param $set-alpha [是否设置随机透明度]
+// @return 随机颜色值(rgba)
+@function random-color($set-alpha: false) {
+	@if ($set-alpha) {
+		@return rgba(random-num(255), random-num(255), random-num(255), random-num(100) / 100);
+	} @else {
+		@return rgba(random-num(255), random-num(255), random-num(255), 1);
+	}
+}
+
+// @desc 字体导入
+// @font-face {
+//     font-family: 'TencentSansW7';
+//     src: url('~@/assets/font/TencentSans-W7.ttf');
+// }
+
+/* 显示0.5px的border
+   应给对于元素加上定位
+ -------------------------- */
+@mixin half-border($left, $right, $bottom: 0, $top: null) {
+    &::after {
+      position: absolute;
+      box-sizing: border-box;
+      content: ' ';
+      pointer-events: none;
+      right: $right;
+      bottom: $bottom;
+      left: $left;
+      top: $top;
+      border-bottom: 1px solid #ebedf0;
+      -webkit-transform: scaleY(0.5);
+      transform: scaleY(0.5);
+  }
+}
+
+
+/* 最多显示$line行的文字，多余的内容会被省略
+ -------------------------- */
+@mixin multi-ellipsis($lines) {
+  display: -webkit-box;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  -webkit-line-clamp: $lines;
+
+  /* autoprefixer: ignore next */
+  -webkit-box-orient: vertical;
+}
+
+
+/*最多显示一行的文字，多余的内容会被省略
+ -------------------------- */
+@mixin ellipsis() {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+
+$imageBackgroundColors: #dbe5f1,#efdfe0,#c0dbd6,#d5cee0,#a0c7ce,#edeed5;
+@mixin backgroundColor-img($wrapperClass, $imageClass) {
+    @each $color in $imageBackgroundColors {
+        $index:index($imageBackgroundColors, $color);
+        .#{$wrapperClass}:nth-child(6n + #{$index}) {
+            /deep/.#{$imageClass} {
+                background-color: $color;
+            }
+        }
+    }
+}
