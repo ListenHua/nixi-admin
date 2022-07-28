@@ -37,11 +37,21 @@
 
 		},
 		onLoad() {
+			this.test()
 			this.$nextTick(() => {
 				this.initChart()
 			})
 		},
 		methods: {
+			// test
+			test(){
+				this.$request('qrcode', {}, {
+					functionName: 'public'
+				}).then(res=>{
+					console.log(res);
+				})
+			},
+			// 初始化echart
 			initChart() {
 				setTimeout(() => {
 					//模拟服务器返回数据，如果数据格式和标准格式不同，需自行按下面的格式拼接

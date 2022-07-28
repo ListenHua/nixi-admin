@@ -1,5 +1,5 @@
 {
-  "name": "remove",
+  "name": "public",
   "dependencies": {
     "wx-common": "file:../common/wx-common"
   },
