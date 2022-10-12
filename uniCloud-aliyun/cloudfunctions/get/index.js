@@ -2,6 +2,9 @@
 const db = uniCloud.database()
 exports.main = async (event, context) => {
 	switch (event.action) {
+		case 'systemData': {
+			return systemData(event.params)
+		}
 		case 'getBookList': {
 			return getBookList(event.params)
 		}
@@ -10,6 +13,9 @@ exports.main = async (event, context) => {
 		}
 		case 'getTopicList': {
 			return getTopicList(event.params)
+		}
+		case 'getTopicInfo': {
+			return getTopicInfo(event.params)
 		}
 		case 'getVersion': {
 			return getVersion(event.params)
@@ -20,9 +26,83 @@ exports.main = async (event, context) => {
 		case 'getLabelList': {
 			return getLabelList(event.params)
 		}
+		case 'getExamDetail': {
+			return getExamDetail(event.params)
+		}
+		case 'topicAnalysis': {
+			return topicAnalysis(event.params)
+		}
 		default: {
 			return
 		}
+	}
+}
+
+async function systemData(event) {
+	let cmd = db.command
+	let key = {
+		type: cmd.eq(event.type)
+	}
+	const collection = db.collection('system-data')
+	let res = await collection.where(key).get()
+	let result = res.data[0]
+	return {
+		code: 200,
+		msg: "请求成功",
+		data: result
+	}
+}
+
+async function topicAnalysis(event) {
+	let cmd = db.command
+	event = event ? event : {}
+	let limit = event.limit ? event.limit : 15
+	let page = event.page ? event.page - 1 < 0 ? 0 : event.page - 1 : 0
+	let key = {
+		id: cmd.eq(event.id),
+		status: cmd.eq(1)
+	}
+	let start = page * limit
+	const collection = db.collection('topic-analysis')
+	let res;
+	let total = await collection.where(key).count()
+	res = await collection.where(key).skip(start).limit(limit).get()
+	let result = res.data
+
+	return {
+		code: 200,
+		msg: "请求成功",
+		total: total.total,
+		data: result
+	}
+}
+
+async function getExamDetail(event) {
+	let {
+		id
+	} = event
+	const exam = db.collection('testPaper')
+	let res = await exam.doc(id).get()
+	console.log(res);
+	if (res.data.length <= 0) {
+		return {
+			code: 400,
+			msg: "找不到该试卷",
+		}
+	}
+	let result = res.data[0]
+	delete result.token
+	let topic;
+	await getTopicList({
+		topic: result.topic
+	}).then(data => {
+		topic = data.data
+	})
+	return {
+		code: 200,
+		msg: "请求成功",
+		data: result,
+		topic,
 	}
 }
 
@@ -62,8 +142,28 @@ async function getVersion(event) {
 	}
 }
 
+async function getTopicInfo(event) {
+	let {
+		id
+	} = event
+	const exam = db.collection('topicList')
+	let res = await exam.doc(id).get()
+	if (res.data.length == 0) {
+		return {
+			code: 400,
+			msg: "找不到该试题",
+		}
+	}
+	let result = res.data[0]
+	return {
+		code: 200,
+		msg: "请求成功",
+		data: result
+	}
+}
+
 async function getTopicList(event) {
-	console.log("event----", typeof(event.level))
+	console.log(event);
 	let cmd = db.command
 	event = event ? event : {}
 	let limit = event.limit ? event.limit : 15
@@ -72,18 +172,25 @@ async function getTopicList(event) {
 	if (event.title) {
 		key.title = new RegExp(event.title)
 	}
-	if (event.level||event.level===0) {
+	if (event.level || event.level === 0) {
 		key.level = event.level
 	}
 	if (event.creater) {
 		key.creater = event.creater
 	}
-	if (event.label&&event.label.length!=0) {
+	if (event.label && event.label.length != 0) {
 		let ary = []
 		event.label.forEach(item => {
 			ary.push(cmd.eq(item))
 		})
 		key.label = cmd.and(ary)
+	}
+	if (event.topic && event.topic.length != 0) {
+		let ary = []
+		event.topic.forEach(item => {
+			ary.push(cmd.eq(item))
+		})
+		key._id = cmd.or(ary)
 	}
 	let start = page * limit
 	let res;
@@ -95,16 +202,13 @@ async function getTopicList(event) {
 			size
 		}).end()
 	} else {
-		res = await collection.where(key).skip(start).limit(limit).get()
+		res = await collection.where(key).skip(start).limit(limit).orderBy('createTime', 'desc').get()
 	}
-	let result = res.data.map(item => {
-		item.label = item.label.join(',')
-		return item
-	})
+	let result = res.data
 	return {
 		code: 200,
 		msg: "请求成功",
-		total:total.total,
+		total: total.total,
 		data: result
 	}
 }
@@ -141,7 +245,7 @@ async function getBookList(event) {
 	return {
 		code: 200,
 		msg: "请求成功",
-		total:total.total,
+		total: total.total,
 		data: result
 	}
 }

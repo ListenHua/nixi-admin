@@ -1,0 +1,7 @@
+{
+  "name": "get",
+  "dependencies": {
+    "wx-common": "file:../common/wx-common"
+  },
+  "extensions": {}
+}

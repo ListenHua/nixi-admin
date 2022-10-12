@@ -32,27 +32,45 @@ async function login(event) {
 	const res = await collection.where({
 		openId: openId,
 	}).get()
-	let result = res.data[0]
-	// 生成token
-	let token = getToken(result)
-	if (result) {
-		return {
-			code: 200,
-			msg: '登录成功',
-			data: {
-				userInfo: result,
-				token: token
+	if (res.data.length > 0) {
+		let result = res.data[0]
+		if (result.nickName && result.avatarUrl) {
+			delete result.openId
+			// 生成token
+			let token = getToken(result)
+			return {
+				code: 200,
+				msg: '登录成功',
+				data: {
+					userInfo: result,
+					token: token
+				}
+			}
+		} else {
+			return {
+				code: 200,
+				msg: '登录成功',
 			}
 		}
-	} else {
-		return {
-			code: 401,
-			msg: '未授权',
-			data: {
-				userInfo: '',
-				token: ''
-			}
-		}
+	}
+
+	// 新增并返回用户信息
+	let userData = {
+		nickName: "",
+		gender: 0,
+		city: '',
+		province: '',
+		country: '',
+		avatarUrl: '',
+		openId,
+		background: '',
+		role: 0,
+		level: 0,
+	}
+	await db.collection("userInfo").add(userData)
+	return {
+		code: 200,
+		msg: '新增用户成功',
 	}
 }
 
@@ -94,47 +112,56 @@ async function authUserInfo(event) {
 		province,
 		country,
 		avatarUrl,
-		openId
+		openId,
+		background: '',
+		role: 0,
+		level: 0,
 	}
-	
-	//将用户信息返回前端
-	let data = {
-		nickName,
-		gender,
-		city,
-		province,
-		country,
-		avatarUrl
-	}
-	
+
 	// 判断是否存在用户
-	const hasIn = await collection.where({
+	const userInfo = await collection.where({
 		openId: openId,
 	}).get()
-	console.log("hasIn------",hasIn)
-	if (hasIn.data.length!=0) {
-		let token = getToken(userData)
-		return {
-			code: 200,
-			msg: '登录成功',
-			data: {
-				userInfo: data,
-				token: token
+	if (userInfo.data.length != 0) {
+		let result = userInfo.data[0]
+		if (result.nickName && result.avatarUrl) {
+			let token = getToken(result)
+			delete result.openId
+			return {
+				code: 200,
+				msg: '登录成功',
+				data: {
+					userInfo: result,
+					token: token
+				}
+			}
+		} else {
+			// 生成token
+			let token = getToken(userData)
+			// 往user表添加用户信息
+			const resData = await db.collection("userInfo").doc(result._id).update(userData)
+			delete userData.openId
+			return {
+				code: 200,
+				msg: '登录成功',
+				data: {
+					userInfo: userData,
+					token: token
+				}
 			}
 		}
 	}
-	
+
 	// 生成token
 	let token = getToken(userData)
-	
 	// 往user表添加用户信息
 	const resData = await db.collection("userInfo").add(userData)
-	console.log("resData",resData)
+	delete userData.openId
 	return {
 		code: 200,
 		msg: '登录成功',
 		data: {
-			userInfo: data,
+			userInfo: userData,
 			token: token
 		}
 	}

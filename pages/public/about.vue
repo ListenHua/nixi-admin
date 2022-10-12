@@ -6,7 +6,7 @@
 				<button size="mini" type="primary" @click="copyImage">复制</button>
 				<button size="mini" type="primary" @click="uploadImage">上传图片</button>
 			</view>
-			<view id="editor" style="height: 900rpx;"></view>
+			<view id="editor"></view>
 			<view class="button-box">
 				<button size="mini" type="primary" @click="editContent">确定修改</button>
 			</view>
@@ -66,6 +66,7 @@
 						this.contentEditor = new wangeditor('#editor')
 						this.contentEditor.config.showLinkImgAlt = false
 						this.contentEditor.config.showLinkImgHref = false
+						this.contentEditor.config.height = 500
 						this.contentEditor.create()
 						this.contentEditor.txt.html(this.contentText)
 					})

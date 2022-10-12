@@ -208,10 +208,11 @@
 	}
 
 	.content-edit-pop {
-		width: 100%;
+		width: 70%;
 		background-color: #fff;
 		padding: 80rpx;
 		border-radius: 8rpx;
+		margin: 0 auto;
 	}
 
 	.button-box {

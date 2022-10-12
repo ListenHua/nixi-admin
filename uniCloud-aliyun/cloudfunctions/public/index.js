@@ -17,7 +17,8 @@ exports.main = async (event, context) => {
 };
 
 async function qrcode(event) {
-	let timestamp = new Date().getTime()
+	console.log('qrcode---event----->',event);
+	let timestamp = event.time
 	const collection = db.collection('serverCache')
 	let serverAccess = (await collection.where({
 		type: "accessToken"
@@ -38,9 +39,9 @@ async function qrcode(event) {
 		accessToken = serverAccess.accessToken
 	}
 	let params = {
-		"page": "pages/index/index",
-		"scene": "a=1",
-		"check_path": true,
+		"page": event.path,
+		"scene": event.scene,
+		"check_path": false,
 		"env_version": "release"
 	}
 	const wxdata = await uniCloud.httpclient.request(
@@ -53,9 +54,5 @@ async function qrcode(event) {
 		cloudPath: 'qrcode' + timestamp + '.jpg',
 		fileContent: wxdata.data
 	})
-	return {
-		code: 200,
-		msg: "请求成功",
-		data: image.fileID
-	}
+	return image.fileID
 }

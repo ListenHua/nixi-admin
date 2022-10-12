@@ -1,5 +1,8 @@
 'use strict';
 const db = uniCloud.database()
+const {
+	verifyToken
+} = require("wx-common");
 exports.main = async (event, context) => {
 	switch (event.action) {
 		case 'editBookInfo': {
@@ -17,12 +20,40 @@ exports.main = async (event, context) => {
 		case 'editTopic': {
 			return editTopic(event.params)
 		}
+		case 'updateBackground': {
+			return updateBackground(event.params)
+		}
 		default: {
 			return
 		}
 	}
 }
 
+async function updateBackground(event) {
+	let {
+		background
+	} = event
+	let userInfo = verifyToken(event.token)
+	if (userInfo == 'expired') {
+		return {
+			code: 402,
+			msg: "授权信息过期"
+		}
+	}
+	if (!userInfo) {
+		return {
+			code: 401,
+			msg: "请先授权登录用户"
+		}
+	}
+	await db.collection("userInfo").doc(userInfo.userInfo._id).update({
+		background
+	})
+	return {
+		code: 200,
+		message: '更新成功!',
+	}
+}
 
 async function editTopic(event) {
 	let {
@@ -38,7 +69,7 @@ async function editTopic(event) {
 	let res = await collection.doc(_id).update({
 		title,
 		type,
-		label:label.split(','),
+		label: label.split(','),
 		option,
 		answer,
 		level,
@@ -58,7 +89,7 @@ async function editVersion(event) {
 	const collection = db.collection('version')
 	let res = await collection.doc(_id).update({
 		version,
-		versionNum:version.replace(/./g,""),
+		versionNum: version.replace(/./g, ""),
 		desc,
 	})
 	return {
@@ -75,7 +106,7 @@ async function editAbout(event) {
 	let res = await collection.doc("62c93508f6d14000017f9e6d").update({
 		content,
 	})
-	console.log("res---====",res)
+	console.log("res---====", res)
 	return {
 		code: 200,
 		message: '修改成功!',
