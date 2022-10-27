@@ -1,0 +1,10 @@
+{
+  "name": "admin",
+  "dependencies": {
+    "uni-id": "file:../../../uni_modules/uni-id/uniCloud/cloudfunctions/common/uni-id",
+    "wx-common": "file:../common/wx-common"
+  },
+  "extensions": {
+    "uni-cloud-jql": {}
+  }
+}

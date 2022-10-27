@@ -170,7 +170,7 @@ async function createSubject(event) {
 			params: {
 				path: "pages/topic/exam",
 				scene: res.id,
-				time,
+				time:createTime,
 			}
 		}
 	})

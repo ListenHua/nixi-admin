@@ -63,7 +63,7 @@
     "h5" : {
         "template" : "template.h5.html",
         "router" : {
-            "base" : "/admin/"
+            "base" : "/"
         },
         "title" : "匿习管理系统"
     },

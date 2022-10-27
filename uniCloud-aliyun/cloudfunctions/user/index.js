@@ -6,6 +6,7 @@ const {
 	verifyToken
 } = require("wx-common");
 const db = uniCloud.database()
+const createTime = new Date().getTime()
 exports.main = async (event, context) => {
 	switch (event.action) {
 		case 'login': {
@@ -66,6 +67,9 @@ async function login(event) {
 		background: '',
 		role: 0,
 		level: 0,
+		createTime,
+		updateTime: createTime,
+		event: {}
 	}
 	await db.collection("userInfo").add(userData)
 	return {
@@ -116,6 +120,9 @@ async function authUserInfo(event) {
 		background: '',
 		role: 0,
 		level: 0,
+		createTime,
+		updateTime: createTime,
+		event: {}
 	}
 
 	// 判断是否存在用户

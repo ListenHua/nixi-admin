@@ -67,6 +67,15 @@
             }
             
         }
+        ,{
+            "path" : "pages/public/user",
+            "style" :                                                                                    
+            {
+                "navigationBarTitleText": "",
+                "enablePullDownRefresh": false
+            }
+            
+        }
     ],
 	"subPackages": [{
 		"root": "pages/system",
