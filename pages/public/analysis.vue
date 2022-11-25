@@ -5,38 +5,41 @@
 		</view> -->
 		<uni-table :loading="loading" border stripe :emptyText="$t('common.empty')">
 			<uni-tr>
-				<uni-th align="center">头像</uni-th>
-				<uni-th align="center">昵称</uni-th>
-				<uni-th align="center">权限</uni-th>
-				<uni-th align="center">等级</uni-th>
+				<uni-th align="center">题目</uni-th>
+				<uni-th align="center">回答内容</uni-th>
+				<uni-th align="center">提交者</uni-th>
+				<uni-th align="center">状态</uni-th>
 				<uni-th align="center">创建日期</uni-th>
-				<uni-th align="center">最后上线日期</uni-th>
 				<uni-th align="center">操作</uni-th>
 			</uni-tr>
-			<uni-tr v-for="(item ,index) in userList" :key="index">
+			<uni-tr v-for="(item ,index) in analysisList" :key="index">
 				<uni-td align="center">
-					<image class="head" :src="item.avatarUrl" mode="aspectFill"></image>
+					<scroll-view scroll-y style="max-height: 300rpx;">
+						<l-parse :content="item.topic.title"></l-parse>
+					</scroll-view>
 				</uni-td>
 				<uni-td align="center">
-					<view class="name">{{item.nickName}}</view>
+					<scroll-view scroll-y style="max-height: 300rpx;">
+						<l-parse :content="item.content"></l-parse>
+					</scroll-view>
 				</uni-td>
 				<uni-td align="center">
-					<view class="name">{{item.role}}</view>
+					<view class="name">{{item.author.nickName}}({{item.author.id}})</view>
 				</uni-td>
 				<uni-td align="center">
-					<view class="name">{{item.level}}</view>
+					<uni-tag v-if="item.status==0" text="未审核" type="warning" size="small"></uni-tag>
+					<uni-tag v-else-if="item.status==1" text="正常" type="primary" size="small"></uni-tag>
+					<uni-tag v-else-if="item.status==2" text="异常" type="error" size="small"></uni-tag>
 				</uni-td>
 				<uni-td align="center">
 					<view class="name">{{item.createTime}}</view>
 				</uni-td>
-				<uni-td align="center">
-					<view class="name">{{item.updateTime}}</view>
-				</uni-td>
 				<uni-td>
 					<view class="uni-group">
-						<picker :range="roleOption" range-key="name" @change="changeRole($event,index)">
-							<button class="uni-button" size="mini" type="primary">设置权限</button>
+						<picker :range="statusOption" range-key="name" @change="changeRole($event,index)">
+							<button class="uni-button" size="mini" type="primary">设置状态</button>
 						</picker>
+						<button class="uni-button" size="mini" type="warn" @click="deleteAnalysis(item._id)">删除</button>
 					</view>
 				</uni-td>
 			</uni-tr>
@@ -49,11 +52,15 @@
 </template>
 
 <script>
+	import LParse from '@/components/li-parse/parse'
 	import dayjs from 'dayjs'
 	export default {
+		components: {
+			LParse
+		},
 		data() {
 			return {
-				userList: [],
+				analysisList: [],
 				// 每页数据量
 				pageSize: 15,
 				// 当前页
@@ -61,19 +68,16 @@
 				// 数据总量
 				total: 0,
 				loading: true,
-				roleIndex: 0,
-				roleOption: [{
-					name: "普通用户",
+				statusIndex: 0,
+				statusOption: [{
+					name: "未审核",
 					role: 0,
 				}, {
-					name: "优先体验者",
+					name: "正常",
 					role: 1
 				}, {
-					name: "运营人员",
+					name: "异常",
 					role: 2
-				}, {
-					name: "管理员",
-					role: 9
 				}]
 			}
 		},
@@ -81,6 +85,33 @@
 			this.getData()
 		},
 		methods: {
+			// 删除分析
+			deleteAnalysis(id) {
+				let params = {
+					id
+				}
+				uni.showModal({
+					title: "警告",
+					content: "是否要删除该题目分析?",
+					success: (res) => {
+						if (res.confirm) {
+							uni.showLoading({
+								title: "删除中"
+							})
+							this.$request('deleteAnalysis', params, {
+								functionName: 'admin'
+							}).then(res => {
+								uni.showToast({
+									title: res.msg
+								})
+								this.getData()
+							}).catch(() => {
+								uni.hideLoading()
+							})
+						}
+					}
+				})
+			},
 			// 上下页切换
 			pageChange(e) {
 				this.pageCurrent = e.current
@@ -88,13 +119,12 @@
 			},
 			// 设置权限
 			changeRole(e, index) {
-				console.log(e, index);
-				this.roleIndex = e.detail.value
+				this.statusIndex = e.detail.value
 				let params = {
-					role: this.roleOption[this.roleIndex].role,
-					user: this.userList[index]._id
+					status: this.statusOption[this.statusIndex].role,
+					id: this.analysisList[index]._id
 				}
-				this.$request('setUserRole', params, {
+				this.$request('setAnalysisStatus', params, {
 					functionName: 'admin'
 				}).then(res => {
 					uni.showToast({
@@ -110,17 +140,16 @@
 					page: this.pageCurrent,
 					limit: this.pageSize
 				}
-				this.$request('microUser', params, {
+				this.$request('topicAnalysis', params, {
 					functionName: 'admin'
 				}).then(res => {
 					console.log(res);
 					this.total = res.total
 					let list = res.data.map(item => {
 						item.createTime = dayjs(item.createTime).format('YYYY-MM-DD HH:mm:ss')
-						item.updateTime = dayjs(item.updateTime).format('YYYY-MM-DD HH:mm:ss')
 						return item
 					})
-					this.userList = list
+					this.analysisList = list
 					this.loading = false
 				})
 			},

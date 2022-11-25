@@ -43,6 +43,7 @@ async function qrcode(event) {
 		"scene": event.scene,
 		"check_path": false,
 		"env_version": "release"
+		// "env_version": "trial"
 	}
 	const wxdata = await uniCloud.httpclient.request(
 		`https://api.weixin.qq.com/wxa/getwxacodeunlimit?access_token=${accessToken}`, {

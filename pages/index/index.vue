@@ -37,55 +37,17 @@
 
 		},
 		onLoad() {
-			this.test()
 			this.$nextTick(() => {
 				this.initChart()
 			})
 		},
 		methods: {
-			// test
-			test(){
-				this.$request('qrcode', {}, {
-					functionName: 'public'
-				}).then(res=>{
-					console.log(res);
-				})
-			},
 			// 初始化echart
 			initChart() {
 				setTimeout(() => {
 					//模拟服务器返回数据，如果数据格式和标准格式不同，需自行按下面的格式拼接
 					let res = {
-						series: [{
-								name: "Welcome",
-								textSize: 60,
-								data: undefined
-							},
-							{
-								name: "Nixi",
-								textSize: 50,
-								data: undefined
-							},
-							{
-								name: "匿习",
-								textSize: 50,
-								data: undefined
-							},
-							{
-								name: "欢迎使用",
-								textSize: 50,
-								data: undefined
-							},
-							{
-								name: "感谢",
-								textSize: 50,
-								data: undefined
-							},
-							{
-								name: "栓Q",
-								textSize: 40,
-								data: undefined
-							},
+						series: [
 							{
 								name: "大数据",
 								textSize: 36,
@@ -134,6 +96,51 @@
 							{
 								name: "uniapp",
 								textSize: 36,
+								data: undefined
+							},
+							{
+								name: "nuxtJs",
+								textSize: 36,
+								data: undefined
+							},
+							{
+								name: "nuxtJs",
+								textSize: 36,
+								data: undefined
+							},
+							{
+								name: "tailwindcss",
+								textSize: 32,
+								data: undefined
+							},
+							{
+								name: "TypeScript",
+								textSize: 40,
+								data: undefined
+							},
+							{
+								name: "QianKun",
+								textSize: 40,
+								data: undefined
+							},
+							{
+								name: "Taro",
+								textSize: 34,
+								data: undefined
+							},
+							{
+								name: "Java",
+								textSize: 40,
+								data: undefined
+							},
+							{
+								name: "Go",
+								textSize: 40,
+								data: undefined
+							},
+							{
+								name: "PHP",
+								textSize: 40,
 								data: undefined
 							}
 						]

@@ -76,6 +76,15 @@
             }
             
         }
+        ,{
+            "path" : "pages/public/analysis",
+            "style" :                                                                                    
+            {
+                "navigationBarTitleText": "",
+                "enablePullDownRefresh": false
+            }
+            
+        }
     ],
 	"subPackages": [{
 		"root": "pages/system",

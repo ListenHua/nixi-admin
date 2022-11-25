@@ -1,7 +1,7 @@
 'use strict';
 const db = uniCloud.database()
 const {
-	verifyToken
+	verifyInfo
 } = require("wx-common");
 const createTime = new Date().getTime()
 exports.main = async (event, context) => {
@@ -34,25 +34,8 @@ exports.main = async (event, context) => {
 };
 // 添加题目解析
 async function topicAnalysis(event) {
-	if (!event.token) {
-		return {
-			code: 401,
-			msg: "请先授权登录用户"
-		}
-	}
-	let userInfo = verifyToken(event.token)
-	if (userInfo == 'expired') {
-		return {
-			code: 402,
-			msg: "授权信息过期"
-		}
-	}
-	if (!userInfo) {
-		return {
-			code: 401,
-			msg: "请先授权登录用户"
-		}
-	}
+	let userInfo = verifyInfo(event.token)
+	if (userInfo.code) return userInfo
 	const collection = db.collection('topic-analysis')
 	delete event.token
 	event.createTime = createTime
@@ -60,14 +43,14 @@ async function topicAnalysis(event) {
 	 * 帖子状态
 	 * 0 未审核 1 正常显示 2 异常
 	 */
-	console.log(userInfo.userInfo)
-	event.status = userInfo.userInfo.role > 0 ? 1 : 0
-	event.author = {
-		avatar: userInfo.userInfo.avatarUrl,
-		name: userInfo.userInfo.nickName,
-		id: userInfo.userInfo._id
+	let params = {
+		topicId: event.id,
+		content: event.content,
+		createTime: event.createTime,
+		status: 0,
+		createId: userInfo._id,
 	}
-	let res = await collection.add(event)
+	let res = await collection.add(params)
 	return {
 		code: 200,
 		msg: "提交审核成功!",
@@ -76,29 +59,11 @@ async function topicAnalysis(event) {
 }
 
 async function answerResult(event) {
-	if (!event.token) {
-		return {
-			code: 401,
-			msg: "请先授权登录用户"
-		}
-	}
-	let userInfo = verifyToken(event.token)
-	if (userInfo == 'expired') {
-		return {
-			code: 402,
-			msg: "授权信息过期"
-		}
-	}
-	if (!userInfo) {
-		return {
-			code: 401,
-			msg: "请先授权登录用户"
-		}
-	}
+	let userInfo = verifyInfo(event.token)
+	if (userInfo.code) return userInfo
 	const collection = db.collection('answerHistory')
 	delete event.token
-	event.answerer = userInfo.userInfo
-	event.answererId = userInfo.userInfo._id
+	event.answererId = userInfo._id
 	event.createTime = createTime
 	let res = await collection.add(event)
 	return {
@@ -112,7 +77,6 @@ async function createSubject(event) {
 	let {
 		title,
 		topic,
-		token,
 		number,
 		limitTime,
 		endTime,
@@ -120,45 +84,26 @@ async function createSubject(event) {
 	// 验证参数
 	if (topic.length <= 0) {
 		return {
-			code: 400,
+			code: 300,
 			msg: "请选择相应的题目",
 		}
 	} else if (!title) {
 		return {
-			code: 400,
+			code: 300,
 			msg: "请输入试卷标题"
 		}
-	} else if (!token) {
-		return {
-			code: 401,
-			msg: "请先授权登录用户"
-		}
 	}
-	let userInfo = verifyToken(token)
-	console.log(userInfo);
-	if (userInfo == 'expired') {
-		return {
-			code: 402,
-			msg: "授权信息过期"
-		}
-	}
-	if (!userInfo) {
-		return {
-			code: 401,
-			msg: "请先授权登录用户"
-		}
-	}
+	let userInfo = verifyInfo(event.token)
+	if (userInfo.code) return userInfo
 	const collection = db.collection('testPaper')
 	let res = await collection.add({
 		title,
 		topic,
-		token,
 		number,
 		limitTime,
 		endTime,
 		createTime,
-		creator: userInfo.userInfo,
-		creatorId: userInfo.userInfo._id,
+		creatorId: userInfo._id,
 		qrcode: '',
 	})
 	console.log('exam-------->', res);
@@ -170,7 +115,7 @@ async function createSubject(event) {
 			params: {
 				path: "pages/topic/exam",
 				scene: res.id,
-				time:createTime,
+				time: createTime,
 			}
 		}
 	})
@@ -200,7 +145,7 @@ async function addLabel(event) {
 	})
 	return {
 		code: 200,
-		message: '新增成功!',
+		msg: '新增成功!',
 	}
 }
 
@@ -218,7 +163,7 @@ async function addVersion(event) {
 	})
 	return {
 		code: 200,
-		message: '新增成功!',
+		msg: '新增成功!',
 	}
 }
 
@@ -245,7 +190,7 @@ async function addTopic(event) {
 	})
 	return {
 		code: 200,
-		message: '新增成功!',
+		msg: '新增成功!',
 	}
 }
 
@@ -272,6 +217,6 @@ async function addBookInfo(event) {
 	console.log(JSON.stringify(res))
 	return {
 		code: 200,
-		message: '新增成功!',
+		msg: '新增成功!',
 	}
 }

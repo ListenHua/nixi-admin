@@ -1,7 +1,7 @@
 'use strict';
 const db = uniCloud.database()
 const {
-	verifyToken
+	verifyInfo
 } = require("wx-common");
 exports.main = async (event, context) => {
 	switch (event.action) {
@@ -20,38 +20,9 @@ exports.main = async (event, context) => {
 		case 'editTopic': {
 			return editTopic(event.params)
 		}
-		case 'updateBackground': {
-			return updateBackground(event.params)
-		}
 		default: {
 			return
 		}
-	}
-}
-
-async function updateBackground(event) {
-	let {
-		background
-	} = event
-	let userInfo = verifyToken(event.token)
-	if (userInfo == 'expired') {
-		return {
-			code: 402,
-			msg: "授权信息过期"
-		}
-	}
-	if (!userInfo) {
-		return {
-			code: 401,
-			msg: "请先授权登录用户"
-		}
-	}
-	await db.collection("userInfo").doc(userInfo.userInfo._id).update({
-		background
-	})
-	return {
-		code: 200,
-		message: '更新成功!',
 	}
 }
 
@@ -76,7 +47,7 @@ async function editTopic(event) {
 	})
 	return {
 		code: 200,
-		message: '修改成功!',
+		msg: '修改成功!',
 	}
 }
 
@@ -94,7 +65,7 @@ async function editVersion(event) {
 	})
 	return {
 		code: 200,
-		message: '修改成功!',
+		msg: '修改成功!',
 	}
 }
 
@@ -109,7 +80,7 @@ async function editAbout(event) {
 	console.log("res---====", res)
 	return {
 		code: 200,
-		message: '修改成功!',
+		msg: '修改成功!',
 	}
 }
 
@@ -130,7 +101,7 @@ async function editBookInfo(event) {
 	})
 	return {
 		code: 200,
-		message: '修改成功!',
+		msg: '修改成功!',
 	}
 }
 
@@ -145,6 +116,6 @@ async function addBookContent(event) {
 	})
 	return {
 		code: 200,
-		message: '新增成功!',
+		msg: '新增成功!',
 	}
 }

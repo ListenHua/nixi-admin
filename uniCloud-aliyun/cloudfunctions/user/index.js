@@ -3,17 +3,22 @@ const {
 	appId,
 	appSecret,
 	getToken,
-	verifyToken
+	verifyInfo
 } = require("wx-common");
 const db = uniCloud.database()
 const createTime = new Date().getTime()
+const default_head =
+	'https://vkceyugu.cdn.bspapp.com/VKCEYUGU-54f1765b-5282-47cf-8405-d6f9ccf838c3/71473287-ddb9-460e-961c-d9e6e8a574bc.png'
 exports.main = async (event, context) => {
 	switch (event.action) {
 		case 'login': {
 			return login(event.params)
 		}
-		case 'authUserInfo': {
-			return authUserInfo(event.params)
+		case 'getInfo': {
+			return getInfo(event.params)
+		}
+		case 'update': {
+			return update(event.params)
 		}
 		default: {
 			return
@@ -35,34 +40,32 @@ async function login(event) {
 	}).get()
 	if (res.data.length > 0) {
 		let result = res.data[0]
-		if (result.nickName && result.avatarUrl) {
-			delete result.openId
-			// 生成token
-			let token = getToken(result)
-			return {
-				code: 200,
-				msg: '登录成功',
-				data: {
-					userInfo: result,
-					token: token
-				}
-			}
-		} else {
-			return {
-				code: 200,
-				msg: '登录成功',
+		await collection.doc(result._id).update({
+			updateTime: createTime,
+		})
+		delete result.openId
+		// 生成token
+		let token = getToken(result)
+		return {
+			code: 200,
+			msg: '登录成功',
+			data: {
+				userInfo: result,
+				token: token
 			}
 		}
 	}
 
+	const count = await collection.count()
 	// 新增并返回用户信息
 	let userData = {
-		nickName: "",
+		nickName: `用户${10000+count.total}`,
+		id: 10000 + count.total,
 		gender: 0,
 		city: '',
 		province: '',
 		country: '',
-		avatarUrl: '',
+		avatarUrl: default_head,
 		openId,
 		background: '',
 		role: 0,
@@ -72,105 +75,65 @@ async function login(event) {
 		event: {}
 	}
 	await db.collection("userInfo").add(userData)
+	let token = getToken(userData)
 	return {
 		code: 200,
 		msg: '新增用户成功',
-	}
-}
-
-async function authUserInfo(event) {
-	const {
-		code,
-		nickName,
-		gender,
-		city,
-		province,
-		country,
-		avatarUrl
-	} = event;
-	console.log(code)
-	//获取openid
-	const res = await uniCloud.httpclient.request(
-		`https://api.weixin.qq.com/sns/jscode2session?appid=${appId}&secret=${appSecret}&js_code=${code}&grant_type=authorization_code`, {
-			dataType: "json"
-		}
-	)
-	console.log(res)
-	let openId = res.data.openid;
-	// 判断是否获取到openId
-	if (!openId) {
-		return {
-			code: 400,
-			msg: '未获取到openId',
-			data: ''
-		}
-	}
-	//获取user表
-	const collection = db.collection('userInfo');
-
-	// 新增并返回用户信息
-	let userData = {
-		nickName,
-		gender,
-		city,
-		province,
-		country,
-		avatarUrl,
-		openId,
-		background: '',
-		role: 0,
-		level: 0,
-		createTime,
-		updateTime: createTime,
-		event: {}
-	}
-
-	// 判断是否存在用户
-	const userInfo = await collection.where({
-		openId: openId,
-	}).get()
-	if (userInfo.data.length != 0) {
-		let result = userInfo.data[0]
-		if (result.nickName && result.avatarUrl) {
-			let token = getToken(result)
-			delete result.openId
-			return {
-				code: 200,
-				msg: '登录成功',
-				data: {
-					userInfo: result,
-					token: token
-				}
-			}
-		} else {
-			// 生成token
-			let token = getToken(userData)
-			// 往user表添加用户信息
-			const resData = await db.collection("userInfo").doc(result._id).update(userData)
-			delete userData.openId
-			return {
-				code: 200,
-				msg: '登录成功',
-				data: {
-					userInfo: userData,
-					token: token
-				}
-			}
-		}
-	}
-
-	// 生成token
-	let token = getToken(userData)
-	// 往user表添加用户信息
-	const resData = await db.collection("userInfo").add(userData)
-	delete userData.openId
-	return {
-		code: 200,
-		msg: '登录成功',
 		data: {
 			userInfo: userData,
 			token: token
 		}
+	}
+}
+
+async function getInfo(event) {
+	let userInfo = verifyInfo(event.token)
+	if (userInfo.code) return userInfo
+	const collection = db.collection('userInfo')
+	let res = await collection.doc(userInfo._id).get()
+	return {
+		code: 200,
+		msg: '获取成功!',
+		data: res.data[0]
+	}
+
+}
+
+async function update(event) {
+	let userInfo = verifyInfo(event.token)
+	if (userInfo.code) return userInfo
+	const collection = db.collection('userInfo')
+	if (event.nickName) {
+		let repeat = await collection.where({
+			nickName: event.nickName
+		}).count()
+		console.log(repeat)
+		if (repeat.total > 0) {
+			return {
+				code: 300,
+				msg: '该昵称已存在',
+			}
+		}
+	}
+	if (event.avatarUrl) {
+		let result = await collection.doc(userInfo._id).get()
+		if (result.data[0].avatarUrl != default_head) {
+			uniCloud.deleteFile({
+				fileList: [result.data[0].avatarUrl]
+			})
+		}
+	}
+	if (event.background || event.background == '') {
+		let result = await collection.doc(userInfo._id).get()
+		uniCloud.deleteFile({
+			fileList: [result.data[0].background]
+		})
+	}
+	delete event.token
+	let res = await collection.doc(userInfo._id).update(event)
+	return {
+		code: 200,
+		msg: '修改成功!',
 	}
 
 }

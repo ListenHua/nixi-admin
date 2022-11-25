@@ -38,9 +38,81 @@ exports.main = async (event, context) => {
 		case 'microUser': {
 			return microUser(event.params)
 		}
+		case 'topicAnalysis': {
+			return topicAnalysis(event.params)
+		}
+		case 'setAnalysisStatus': {
+			return setAnalysisStatus(event.params)
+		}
+		case 'deleteAnalysis': {
+			return deleteAnalysis(event.params)
+		}
 		default: {
 			return
 		}
+	}
+}
+
+async function deleteAnalysis(event) {
+	// 将删除的数据添加到临时库
+	let data = await db.collection('topic-analysis').doc(event.id).get();
+	data.data[0].db = 'topic-analysis'
+	let data_res = data.data[0]
+	await db.collection('trashCan').add(data_res)
+
+	const collection = db.collection('topic-analysis')
+	let res = await collection.doc(event.id).remove();
+	if (res.deleted === 1) {
+		return {
+			code: 200,
+			msg: "删除成功！",
+		}
+	} else {
+		return {
+			code: 400,
+			msg: "删除失败！"
+		}
+	}
+}
+
+async function setAnalysisStatus(event) {
+	let {
+		id,
+		status
+	} = event
+	const collection = db.collection('topic-analysis')
+	let res = await collection.doc(id).update({
+		status,
+	})
+	return {
+		code: 200,
+		msg: '修改成功!',
+	}
+}
+
+
+async function topicAnalysis(event) {
+	let cmd = db.command
+	event = event ? event : {}
+	let limit = event.limit ? event.limit : 15
+	let page = event.page ? event.page - 1 < 0 ? 0 : event.page - 1 : 0
+	let start = page * limit
+	const collection = db.collection('topic-analysis')
+	let res;
+	let total = await collection.count()
+	res = await collection.skip(start).limit(limit).get()
+	let result = res.data
+	for (let i in result) {
+		let user = await db.collection('userInfo').doc(result[i].createId).get()
+		let topic = await db.collection('topicList').doc(result[i].topicId).get()
+		result[i].author = user.data[0]
+		result[i].topic = topic.data[0]
+	}
+	return {
+		code: 200,
+		msg: "请求成功",
+		total: total.total,
+		data: result
 	}
 }
 
