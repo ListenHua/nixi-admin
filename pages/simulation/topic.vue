@@ -16,34 +16,24 @@
 		<view class="uni-container">
 			<uni-table :loading="loading" border stripe :emptyText="$t('common.empty')">
 				<uni-tr>
-					<uni-th width="300" align="center">题目</uni-th>
-					<uni-th width="80" align="center">类型</uni-th>
+					<uni-th width="300" align="center">问题</uni-th>
 					<uni-th align="center">等级</uni-th>
-					<uni-th align="center">标签</uni-th>
-					<uni-th align="center">选项</uni-th>
-					<uni-th align="center">答案</uni-th>
+					<uni-th width="80" align="center">类型</uni-th>
+					<uni-th align="center">专题</uni-th>
+					<uni-th align="center">速度</uni-th>
+					<uni-th align="center">按钮</uni-th>
 					<uni-th align="center">操作</uni-th>
 				</uni-tr>
 				<uni-tr v-for="(item ,index) in tableData" :key="index">
-					<uni-td>
-						<scroll-view scroll-y style="max-height: 300rpx;">
-							<l-parse :content="item.title"></l-parse>
-						</scroll-view>
-					</uni-td>
+					<uni-td align="center">{{item.text}}</uni-td>
+					<uni-td align="center">{{item.level===1?'初级':item.level===2?'中级':'高级'}}</uni-td>
 					<uni-td align="center">
-						<view class="name">{{item.type===0?'多选':item.type===1?'单选':'问答题'}}</view>
+						<view v-if="item.type==='ask'" class="name">问答</view>
+						<view v-else-if="item.type==='talk'" class="name">对话</view>
 					</uni-td>
-					<uni-td align="center">{{item.level===0?'初级':item.level===1?'中级':'高级'}}</uni-td>
-					<uni-td align="center">{{item.label}}</uni-td>
-					<uni-td align="center">
-						<view v-if="item.type===2" class="name">-</view>
-						<button v-else class="uni-button" size="mini" type="primary"
-							@click="viewOption(item.option)">查看选项</button>
-					</uni-td>
-					<uni-td align="center">
-						<button v-if="item.type===2" class="uni-button" size="mini" type="primary">查看答案</button>
-						<view v-else class="name">{{item.answer}}</view>
-					</uni-td>
+					<uni-td align="center">{{item.key}}</uni-td>
+					<uni-td align="center">{{item.speed}}</uni-td>
+					<uni-td align="center">{{item.button}}</uni-td>
 					<uni-td>
 						<view class="uni-group">
 							<button class="uni-button" size="mini" type="primary"
@@ -66,50 +56,34 @@
 				<uni-forms ref="editInfo" :modelValue="editFormData" :rules="rules">
 					<uni-forms-item label="题目" name="id">
 						<view class="content-text">
-							<view>{{editFormData.title}}</view>
-							<button class="uni-button" size="mini" type="primary"
-								@click="openEditContentPop(editFormData.title,-1)">编辑标题</button>
+							<uni-easyinput placeholder="请输入问题" v-model="editFormData.text" />
 						</view>
-					</uni-forms-item>
-					<uni-forms-item label="类型" name="type">
-						<uni-data-checkbox mode="tag" v-model="editFormData.type" :localdata="typeOption">
-						</uni-data-checkbox>
 					</uni-forms-item>
 					<uni-forms-item label="等级" name="level">
 						<uni-data-checkbox mode="tag" v-model="editFormData.level" :localdata="levelOption">
 						</uni-data-checkbox>
 					</uni-forms-item>
-					<uni-forms-item label="标签" name="label">
+					<uni-forms-item label="专题" name="label">
 						<view class="content-text">
-							<uni-easyinput type="text" placeholder="请选择标签" disabled :styles="{disableColor:'#fff'}"
-								v-model="editFormData.label" />
-							<button class="uni-button" size="mini" type="primary"
-								@click="openLabelSelectPop">选择标签</button>
+							<uni-data-checkbox mode="tag" v-model="editFormData.key" :localdata="typeOption">
+							</uni-data-checkbox>
 						</view>
 					</uni-forms-item>
-					<uni-forms-item label="答案" name="answer">
-						<uni-easyinput v-if="editFormData.type==0" type="number" placeholder="请输入答案下标"
-							v-model="editFormData.answer" />
-						<uni-easyinput v-else-if="editFormData.type==1" type="text" placeholder="请输入答案下标,从0开始,逗号分隔"
-							v-model="editFormData.answer" />
-						<view v-else class="content-text">
-							<view>{{editFormData.answer}}</view>
-							<button class="uni-button" size="mini" type="primary"
-								@click="openEditContentPop(editFormData.answer)">编辑内容</button>
-						</view>
+					<uni-forms-item label="速度">
+						<uni-easyinput type="number" placeholder="请输入展示速度" v-model="editFormData.speed" />
 					</uni-forms-item>
-					<uni-forms-item label="选项" v-if="editFormData.type==0||editFormData.type==1">
-						<view class="content-text" v-for="(item,index) in editFormData.option" :key='index'>
-							<view>{{item.content}}</view>
-							<button class="uni-button" size="mini" type="primary"
-								@click="openEditContentPop(item.content,index)">编辑内容</button>
-							<button v-if="editFormData.option.length>1" class="uni-button" size="mini" type="warn"
-								@click="deleteOption(index)">删除</button>
-						</view>
+					<uni-forms-item label="角色">
+						<uni-easyinput disabled type="text" v-model="editFormData.talker" />
+					</uni-forms-item>
+					<uni-forms-item label="方式">
+						<uni-data-checkbox mode="tag" v-model="editFormData.type" :localdata="talkOption">
+						</uni-data-checkbox>
+					</uni-forms-item>
+					<uni-forms-item v-if="editFormData.type=='ask'" label="按钮文本">
+						<uni-easyinput type="text" placeholder="请输入按钮文本" v-model="editFormData.button" />
 					</uni-forms-item>
 				</uni-forms>
 				<view class="button-box">
-					<button size="mini" type="primary" @click="addOption">新增选项</button>
 					<button v-show="popStatus=='add'" size="mini" type="primary" @click="submitadd">新增题目</button>
 					<button v-show="popStatus=='edit'" size="mini" type="primary" @click="submitEdit">修改信息</button>
 					<button size="mini" type="default" @click="closeEditPop(0)">取消</button>
@@ -134,14 +108,10 @@
 		<!-- 选择标签弹窗 -->
 		<uni-popup ref="labelPop" type="center">
 			<view class="label-pop">
-				<view class="content-text">
-					<uni-easyinput type="text" v-model="labelText" />
-					<button size="mini" type="primary" @click="addLabel">添加标签</button>
-				</view>
 				<scroll-view scroll-y="true" style="height: 500rpx;">
 					<view class="label-list">
-						<uni-tag v-for="(item,index) in labelList" size="small" :inverted="!item.check"
-							:text="item.name" type="primary" :style="{'margin-right':'20rpx'}"
+						<uni-tag v-for="(item,index) in typeList" size="small" :inverted="!item.check"
+							:text="item.title" type="primary" :style="{'margin-right':'20rpx'}"
 							@click="item.check = !item.check" />
 					</view>
 				</scroll-view>
@@ -170,7 +140,7 @@
 			return {
 				creater: uni.getStorageSync('lastUsername'),
 				labelText: '',
-				labelList: [],
+				typeList: [],
 				searchVal: '',
 				tableData: [],
 				optionList: [],
@@ -183,25 +153,23 @@
 				loading: false,
 				editFormData: {},
 				coverUploadUrl: {},
-				typeOption: [{
-					text: '多选',
-					value: 0
+				typeOption: [],
+				talkOption: [{
+					text: '问答',
+					value: 'ask',
 				}, {
-					text: '单选',
-					value: 1
-				}, {
-					text: '问答题',
-					value: 2
+					text: '谈话',
+					value: 'talk',
 				}],
 				levelOption: [{
 					text: '初级',
-					value: 0,
-				}, {
-					text: '中级',
 					value: 1,
 				}, {
-					text: '高级',
+					text: '中级',
 					value: 2,
+				}, {
+					text: '高级',
+					value: 3,
 				}],
 				popStatus: '',
 				rules: {
@@ -230,7 +198,7 @@
 		mounted() {
 			this.getList()
 			this.initEditFormData()
-			this.getLabelList()
+			this.getTypeList()
 		},
 		methods: {
 			// 查看选项
@@ -244,81 +212,32 @@
 				this.getList()
 			},
 			// 确定选择标签
-			selectLabel() {
-				let ary = []
-				this.labelList.forEach(item => {
-					if (item.check) {
-						ary.push(item.name)
-					}
-				})
-				this.editFormData.label = ary.join(',')
-				this.$refs.labelPop.close()
-			},
-			// 添加标签
-			addLabel() {
-				let label = this.labelList.map(item => {
-					return item.name
-				})
-
-				if (label.includes(this.labelText)) {
-					uni.showToast({
-						title: "该标签已存在",
-						icon: "none"
-					})
-					return
-				}
-				this.$request('addLabel', {
-					name: this.labelText
-				}, {
-					functionName: 'admin'
-				}).then(res => {
-					console.log("res,success----", res)
-					if (res.code == 200) {
-						uni.showToast({
-							title: "新增成功"
-						})
-						this.labelText = ''
-						this.getLabelList()
-					}
+			selectLabel(index) {
+				this.typeList.map((item, i) => {
+					item.check = index == i ? true : false
 				})
 			},
 			// 获取标签列表
-			getLabelList() {
-				this.$request('getLabelList', '', {
-					functionName: 'get'
+			getTypeList() {
+				this.$request('getSimulationList', '', {
+					functionName: 'admin'
 				}).then(res => {
+					console.log(res);
 					if (res.code == 200) {
 						let list = res.data
-						this.labelList = list.map(item => {
-							item.check = false
-							return item
+						this.typeOption = list.map(item => {
+							let obj = {
+								text: item.title,
+								value: item.key
+							}
+							return obj
 						})
-						this.checkMySelectLabel()
 					}
-				})
-			},
-			// 检测我已选中的标签
-			checkMySelectLabel() {
-				let list = this.labelList
-				let select = this.editFormData.label.split(',')
-				list.map(item => {
-					item.check = select.includes(item.name)
 				})
 			},
 			// 打开标签选择弹窗
 			openLabelSelectPop() {
 				this.$refs.labelPop.open()
-				this.checkMySelectLabel()
-			},
-			// 删除选项
-			deleteOption(index) {
-				this.editFormData.option.splice(index, 1)
-			},
-			// 新增选项
-			addOption() {
-				this.editFormData.option.push({
-					content: ''
-				})
 			},
 			// 打开编辑器弹窗
 			openEditContentPop(item, index) {
@@ -333,22 +252,6 @@
 					this.contentEditor.create()
 					this.contentEditor.txt.html(item)
 				})
-			},
-			// 返回富文本框结果
-			returnContent() {
-				let index = this.editIndex
-				let content = this.contentEditor.txt.html()
-				if (index == -1) {
-					this.editFormData.title = content
-				} else {
-					if (this.editFormData.type === 2) {
-						this.editFormData.answer = content
-					} else {
-						this.editFormData.option[index].content = content
-					}
-				}
-				this.closeEditPop(1)
-				this.editIndex = ''
 			},
 			// 上传图片
 			uploadImage() {
@@ -389,8 +292,7 @@
 			// 确认修改
 			submitEdit() {
 				this.$refs.editInfo.validate().then(e => {
-					console.log("res----", this.editFormData)
-					this.$request('editTopic', this.editFormData, {
+					this.$request('editSimulationTopic', this.editFormData, {
 							functionName: 'admin'
 						}).then(res => {
 							console.log("res,success----", res)
@@ -410,8 +312,7 @@
 			// 新增题目
 			submitadd() {
 				this.$refs.editInfo.validate().then(e => {
-					console.log("res----", e)
-					this.$request('addTopic', this.editFormData, {
+					this.$request('addSimulationTopic', this.editFormData, {
 							functionName: 'admin'
 						}).then(res => {
 							console.log("res,success----", res)
@@ -435,8 +336,8 @@
 					title: "提示",
 					content: "是否要删除该题目?",
 					success: res => {
-						this.$request('topic', item, {
-							functionName: 'remove'
+						this.$request('deleteSimulationTopic', item, {
+							functionName: 'admin'
 						}).then(res => {
 							if (res.code == 200) {
 								uni.showToast({
@@ -458,7 +359,7 @@
 				})
 
 			},
-			// 打开新增书籍弹窗
+			// 打开新增题目弹窗
 			addNewTopic() {
 				this.popStatus = 'add'
 				this.initEditFormData()
@@ -467,16 +368,14 @@
 			// 初始化表格数据
 			initEditFormData() {
 				this.editFormData = {
-					title: "",
-					type: 0,
-					author: "",
+					text: "",
+					type: 'ask',
+					talker: "hr",
 					creater: this.creater,
-					label: "",
-					level: 0,
-					option: [{
-						content: ''
-					}],
-					answer: "",
+					level: 1,
+					key: '',
+					button: '回答',
+					speed: 100,
 				}
 				this.coverUploadUrl = {}
 			},
@@ -509,12 +408,12 @@
 					title: "数据加载中...",
 					mask: true
 				})
-				this.$request('getTopicList', {
+				this.$request('getSimulationTopic', {
 					page: this.pageCurrent,
 					limit: this.pageSize,
-					creater: this.creater == 'admin' ? '' : this.creater
+					creater: this.creater == 'admin' ? 'admin' : this.creater
 				}, {
-					functionName: 'get'
+					functionName: 'admin'
 				}).then(res => {
 					this.total = res.total
 					this.tableData = res.data
@@ -547,7 +446,8 @@
 		max-height: 500px;
 		overflow-y: scroll;
 		overflow-x: hidden;
-		.option-block{
+
+		.option-block {
 			background-color: #f4f4f4;
 			padding: 20rpx;
 			border-radius: 10rpx;

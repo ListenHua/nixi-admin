@@ -11,6 +11,9 @@ exports.main = async (event, context) => {
 		case 'getBookList': {
 			return getBookList(event.params)
 		}
+		case 'getBookInfo': {
+			return getBookInfo(event.params)
+		}
 		case 'getBookContent': {
 			return getBookContent(event.params)
 		}
@@ -44,9 +47,71 @@ exports.main = async (event, context) => {
 		case 'myCreateExam': {
 			return myCreateExam(event.params)
 		}
+		case 'simulationList': {
+			return simulationList(event.params)
+		}
+		case 'simulationTopic': {
+			return simulationTopic(event.params)
+		}
 		default: {
 			return
 		}
+	}
+}
+
+// 获取模拟面试专题试题
+async function simulationTopic(event) {
+	let cmd = db.command
+	let key = event.key
+	const collection = db.collection('simulation-topic')
+	// 初级题目
+	let primary = await collection.aggregate().match({
+		key,
+		level: 1
+	}).sample({
+		size: 10
+	}).end()
+	primary = primary.data
+	// 中级题目
+	let middle_rank = await collection.aggregate().match({
+		key,
+		level: 2
+	}).sample({
+		size: 5
+	}).end()
+	middle_rank = middle_rank.data
+	// 高级题目
+	let senior = await collection.aggregate().match({
+		key,
+		level: 3
+	}).sample({
+		size: 5
+	}).end()
+	senior = senior.data
+
+	let result = [...primary, ...middle_rank, ...senior]
+
+	return {
+		code: 200,
+		msg: "请求成功",
+		data: result
+	}
+}
+// 获取模拟面试专题列表
+async function simulationList(event) {
+	let cmd = db.command
+	let limit = event.limit ? event.limit : 15
+	let page = event.page ? event.page - 1 < 0 ? 0 : event.page - 1 : 0
+	let start = page * limit
+	const collection = db.collection('simulation-list')
+	let res = await collection.skip(start).limit(limit).get()
+	let total = await collection.count()
+	let result = res.data
+	return {
+		code: 200,
+		msg: "请求成功",
+		total: total.total,
+		data: result
 	}
 }
 
@@ -166,6 +231,7 @@ async function topicAnalysis(event) {
 	let result = res.data
 	for (let i in result) {
 		let user = await db.collection('userInfo').doc(result[i].createId).get()
+		console.log("用户信息————>", user)
 		result[i].author = user.data[0]
 	}
 	return {
@@ -349,8 +415,32 @@ async function getBookList(event) {
 	}
 }
 
+
 async function getBookContent(event) {
-	if (event.id) {
+	let limit = event.limit ? event.limit : 15
+	let page = event.page ? event.page - 1 < 0 ? 0 : event.page - 1 : 0
+	let start = page * limit
+	let {
+		book_id
+	} = event
+	const collection = db.collection('book-content')
+	let total = await collection.where({
+		book_id
+	}).count()
+	let res = await collection.where({
+		book_id
+	}).skip(start).limit(limit).get()
+	let result = res.data
+	return {
+		code: 200,
+		msg: '获取成功!',
+		total: total.total,
+		data: result,
+	}
+}
+
+async function getBookInfo(event) {
+	try {
 		const collection = db.collection('bookList')
 		const res = await collection.where({
 			_id: event.id,
@@ -368,10 +458,10 @@ async function getBookContent(event) {
 				data: res.data[0]
 			}
 		}
-	} else {
+	} catch {
 		return {
-			code: 500,
-			msg: "请输入参数"
+			code: 400,
+			msg: "参数错误",
 		}
 	}
 

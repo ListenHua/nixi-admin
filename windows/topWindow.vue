@@ -202,7 +202,7 @@
 		height: 60px;
 		width: 100%;
 		box-sizing: border-box;
-		border-bottom: 1px solid darken($top-window-bg-color, 8%);
+		// border-bottom: 1px solid darken($top-window-bg-color, 8%);
 		background-color: $top-window-bg-color;
 		color: $top-window-text-color;
 	}

@@ -123,7 +123,7 @@
 						version: this.contentText.version,
 						desc: this.contentText.desc
 					}, {
-						functionName: 'add'
+						functionName: 'admin'
 					}).then(res => {
 						uni.showToast({
 							title: "添加成功"

@@ -1,7 +1,7 @@
 <template>
 	<scroll-view class="sidebar" scroll-y="true">
-		<uni-data-menu ref="menu" :value="currentMenu" collection="opendb-admin-menus" :page-size="500"
-			:field="field" orderby="sort asc" active-text-color="#409eff" @select="select">
+		<uni-data-menu ref="menu" :value="currentMenu" collection="opendb-admin-menus" :page-size="500" :field="field"
+			orderby="sort asc" active-text-color="#409eff" @select="select">
 		</uni-data-menu>
 	</scroll-view>
 </template>
@@ -41,7 +41,7 @@
 				immediate: true,
 				handler(newVal, oldVal) {
 					if (newVal) {
-						this.$nextTick(function(){
+						this.$nextTick(function() {
 							this.$refs.menu.load()
 						})
 					}
@@ -101,9 +101,10 @@
 		width: 240px;
 		height: calc(100vh - (var(--top-window-height)));
 		box-sizing: border-box;
-		border-right: 1px solid darken($left-window-bg-color, 8%);
+		// border-right: 1px solid darken($left-window-bg-color, 8%);
 		background-color: $left-window-bg-color;
-		padding-bottom: 10px;
+		padding:0 10px 10px;
+
 	}
 
 	.title {

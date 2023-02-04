@@ -85,6 +85,15 @@
             }
             
         }
+        ,{
+            "path" : "pages/simulation/topic",
+            "style" :                                                                                    
+            {
+                "navigationBarTitleText": "",
+                "enablePullDownRefresh": false
+            }
+            
+        }
     ],
 	"subPackages": [{
 		"root": "pages/system",

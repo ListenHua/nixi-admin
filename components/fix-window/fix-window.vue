@@ -30,6 +30,7 @@
 
 <style>
 .fix-window {
+	
 }
 .fix-window-button {
 	width: 30px;

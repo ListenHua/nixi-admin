@@ -1,6 +1,6 @@
 <template>
-	<view class="uni-menu-item" :class="{'is-active':active,'is-disabled':disabled}" :style="{paddingLeft:paddingLeft,'color':disabled?'#999':(active?activeTextColor:textColor),'background-color':active?activeBackgroundColor:''}"
-	 @click="onClickItem">
+	<view class="uni-menu-item" :class="{'is-active':active,'is-disabled':disabled}" :style="{paddingLeft:paddingLeft}"
+		@click="onClickItem">
 		<slot></slot>
 	</view>
 </template>
@@ -13,8 +13,8 @@
 		props: {
 			// 唯一标识
 			index: {
-				type: [String,Object],
-				default(){
+				type: [String, Object],
+				default () {
 					return ''
 				}
 			},
@@ -28,7 +28,7 @@
 			return {
 				active: false,
 				activeTextColor: '#42B983',
-				textColor: '#303133',
+				textColor: '#ff3030',
 				activeBackgroundColor: ''
 			};
 		},
@@ -78,7 +78,7 @@
 				this.active = true
 				this.indexPath.unshift(this.index)
 				this.indexPath.reverse()
-				if(e !== 'init'){
+				if (e !== 'init') {
 					// this.$menuParent.activeIndex=this.index
 					this.$menuParent.select(this.index, this.indexPath)
 				}
@@ -92,12 +92,15 @@
 	.uni-menu-item {
 		display: flex;
 		align-items: center;
-		padding: 0 20px;
-		height: 56px;
-		line-height: 56px;
+		padding: 0 10px;
+		height: 46px;
+		margin-bottom: 10px;
+		line-height: 46px;
 		color: #303133;
 		transition: all 0.3s;
 		cursor: pointer;
+		background-color: $menu-bg-color;
+		overflow: hidden;
 		// border-bottom: 1px #f5f5f5 solid;
 	}
 
@@ -105,11 +108,14 @@
 		outline: none;
 		background-color: #EBEBEB;
 		transition: all 0.3s;
+		border-radius: 68px;
 	}
 
 	.is-active {
-		color: #42B983;
-		// background-color: #ecf8f3;
+		color: #fff;
+		border-radius: 68px;
+		background-image: linear-gradient(to right, #3478F5, #71a0f8);
+		background-color: transparent !important;
 	}
 
 	.is-disabled {
@@ -118,8 +124,9 @@
 	}
 
 	.uni-menu-item.is-disabled:hover {
-		background-color: inherit;
+		// background-color: inherit;
 		color: #999;
+		border-radius: 68px;
 		cursor: not-allowed;
 	}
 </style>

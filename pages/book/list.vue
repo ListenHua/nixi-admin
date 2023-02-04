@@ -140,7 +140,7 @@
 				}
 				this.$refs.editInfo.validate().then(res => {
 					this.$request('addBookInfo', this.editFormData, {
-						functionName: 'add'
+						functionName: 'admin'
 					}).then(res => {
 						if (res.code == 200) {
 							this.initEditFormData()

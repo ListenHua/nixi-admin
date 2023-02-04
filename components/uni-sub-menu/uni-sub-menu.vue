@@ -6,7 +6,7 @@
 			</view>
 			<uni-icons class="uni-sub-menu__icon" :class="{transition:isOpen}" type="arrowdown" color="#bbb" size="14"></uni-icons>
 		</view>
-		<view class="uni-sub-menu__content" :class="{'uni-sub-menu--close':!isOpen}" :style="{'background-color':backgroundColor}">
+		<view class="uni-sub-menu__content" :class="{'uni-sub-menu--close':!isOpen}">
 			<view id="content--hook">
 				<slot></slot>
 			</view>
@@ -106,16 +106,15 @@
 <style lang="scss">
 	.uni-sub-menu {
 		position: relative;
-		/* background-color: #FFFFFF; */
 	}
 
 	.uni-sub-menu__title {
 		display: flex;
 		align-items: center;
 		padding: 0 20px;
-		padding-right: 10px;
-		height: 56px;
-		line-height: 56px;
+		height: 46px;
+		line-height: 46px;
+		margin-bottom: 10px;
 		color: #303133;
 		cursor: pointer;
 		/* border-bottom: 1px #f5f5f5 solid; */
@@ -124,6 +123,7 @@
 	.uni-sub-menu__title:hover {
 		color: #42B983;
 		outline: none;
+		border-radius: 68px;
 		background-color: #EBEBEB;
 	}
 

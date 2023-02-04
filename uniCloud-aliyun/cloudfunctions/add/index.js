@@ -6,18 +6,6 @@ const {
 const createTime = new Date().getTime()
 exports.main = async (event, context) => {
 	switch (event.action) {
-		case 'addBookInfo': {
-			return addBookInfo(event.params)
-		}
-		case 'addTopic': {
-			return addTopic(event.params)
-		}
-		case 'addVersion': {
-			return addVersion(event.params)
-		}
-		case 'addLabel': {
-			return addLabel(event.params)
-		}
 		case 'createSubject': {
 			return createSubject(event.params)
 		}
@@ -131,92 +119,5 @@ async function createSubject(event) {
 			shareImg: qrcode.result,
 			id: res.id
 		}
-	}
-}
-
-async function addLabel(event) {
-	let {
-		name,
-	} = event
-	const collection = db.collection('labelList')
-	let res = await collection.add({
-		name,
-		createTime,
-	})
-	return {
-		code: 200,
-		msg: '新增成功!',
-	}
-}
-
-async function addVersion(event) {
-	let {
-		version,
-		desc,
-	} = event
-	const collection = db.collection('version')
-	let res = await collection.add({
-		version,
-		versionNum: version.replace(/./g, ""),
-		desc,
-		createTime,
-	})
-	return {
-		code: 200,
-		msg: '新增成功!',
-	}
-}
-
-async function addTopic(event) {
-	let {
-		title,
-		type,
-		label,
-		option,
-		answer,
-		level,
-		creater,
-	} = event
-	const collection = db.collection('topicList')
-	let res = await collection.add({
-		title,
-		type,
-		label: label.split(','),
-		option,
-		answer,
-		creater,
-		level,
-		createTime,
-	})
-	return {
-		code: 200,
-		msg: '新增成功!',
-	}
-}
-
-async function addBookInfo(event) {
-	let {
-		cover,
-		author,
-		creater,
-		title,
-		type,
-		origin,
-	} = event
-	const collection = db.collection('bookList')
-	let res = await collection.add({
-		cover,
-		author,
-		creater,
-		title,
-		type,
-		origin,
-		createTime,
-		list: []
-	})
-	console.log(JSON.stringify(res))
-	return {
-		code: 200,
-		msg: '新增成功!',
 	}
 }

@@ -8,7 +8,7 @@
 				<uni-th width="300" align="center">标题</uni-th>
 				<uni-th width="204" align="center">操作</uni-th>
 			</uni-tr>
-			<uni-tr v-for="(item ,index) in bookInfo.list" :key="index">
+			<uni-tr v-for="(item ,index) in contentList" :key="index">
 				<uni-td align="center">
 					<view class="name">{{item.title}}</view>
 				</uni-td>
@@ -22,6 +22,10 @@
 				</uni-td>
 			</uni-tr>
 		</uni-table>
+		<view class="uni-pagination-box">
+			<uni-pagination show-icon :page-size="pageSize" :current="pageCurrent" :total="total"
+				@change="pageChange" />
+		</view>
 		<uni-popup ref="contentPop" type="center" :mask-click="false">
 			<view class="content-edit-pop">
 				<uni-easyinput type="text" v-model="contentText.title" placeholder="请输入标题"
@@ -33,7 +37,7 @@
 				</view>
 				<div id="editor"></div>
 				<view class="button-box">
-					<button size="mini" type="primary" @click="addBookContent">确定</button>
+					<button size="mini" type="primary" @click="submit">确定</button>
 					<button size="mini" type="default" @click="closeEditPop">取消编辑</button>
 				</view>
 			</view>
@@ -48,15 +52,18 @@
 		data() {
 			return {
 				contentEditor: '',
-				bookInfo: '',
+				contentList: [],
 				loading: true,
+				pageSize: 15,
+				pageCurrent: 1,
+				total: 0,
 				contentText: {
 					title: "",
 					content: "",
 				},
-				editorConfig:{
-					showLinkImgAlt:false,
-					showLinkImgHref:false
+				editorConfig: {
+					showLinkImgAlt: false,
+					showLinkImgHref: false
 				},
 				editStatus: "",
 				editContent: "",
@@ -70,6 +77,11 @@
 			this.getData()
 		},
 		methods: {
+			// 切换上下页
+			pageChange(e){
+				this.pageCurrent = e.current
+				this.getData()
+			},
 			// 初始化页面数据
 			initPageData() {
 				this.contentText = {
@@ -114,29 +126,29 @@
 			getData() {
 				let id = this.bookId
 				this.$request('getBookContent', {
-					'id': id
+					page: this.pageCurrent,
+					limit: this.pageSize,
+					book_id: id
 				}, {
 					functionName: 'get'
 				}).then(res => {
-					this.bookInfo = res.data
+					this.contentList = res.data
+					this.total = res.total
 					this.loading = false
 				})
 			},
 			// 删除内容
 			deleteContent(item, index) {
 				let that = this
-				let list = this.bookInfo.list
 				uni.showModal({
 					title: "是否删除标题为：“" + item.title + "”的内容",
 					success(res) {
 						console.log(res)
 						if (res.confirm) {
-							list.splice(index, 1)
-							that.$request('addBookContent', {
-								_id: that.bookInfo._id,
-								list
+							that.$request('deleteBookContent', {
+								id: item._id
 							}, {
-								functionName: 'edit'
+								functionName: 'admin'
 							}).then(res => {
 								uni.showToast({
 									title: "删除成功"
@@ -147,21 +159,46 @@
 					}
 				})
 			},
-			// 确定编辑
+			submit() {
+				let index = this.editIndex
+				if (index || index === 0) {
+					this.editBookContent()
+				} else {
+					this.addBookContent()
+				}
+			},
+			// 新增
 			addBookContent() {
-				let list = this.bookInfo.list
+				let list = this.contentList
+				this.contentText.content = this.contentEditor.txt.html()
+				let params = {
+					book_id: this.bookId,
+					title: this.contentText.title,
+					content: this.contentText.content
+				}
+				this.$request('addBookContent', params, {
+					functionName: 'admin'
+				}).then(res => {
+					uni.showToast({
+						title: "新增成功"
+					})
+					this.closeEditPop()
+					this.editIndex = ''
+					this.getData()
+				})
+			},
+			// 编辑
+			editBookContent() {
+				let list = this.contentList
 				let index = this.editIndex
 				this.contentText.content = this.contentEditor.txt.html()
-				if (index || index === 0) {
-					list[index] = this.contentText
-				} else {
-					list.push(this.contentText)
+				let params = {
+					id: list[index]._id,
+					title: this.contentText.title,
+					content: this.contentText.content
 				}
-				this.$request('addBookContent', {
-					_id: this.bookInfo._id,
-					list
-				}, {
-					functionName: 'edit'
+				this.$request('editBookContent', params, {
+					functionName: 'admin'
 				}).then(res => {
 					uni.showToast({
 						title: "修改成功"
@@ -171,8 +208,10 @@
 					this.getData()
 				})
 			},
-			onCreated(editor){
+			onCreated(editor) {
+				let list = this.contentList
 				this.contentEditor = Object.seal(editor)
+				this.contentText.content = this.contentEditor.txt.html()
 			},
 			// 打开编辑器弹窗
 			openEditContentPop(item, index) {

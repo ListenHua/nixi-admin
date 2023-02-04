@@ -63,7 +63,7 @@ export function request(action, params, {
 		return Promise.resolve(result)
 	}).catch(err => {
 		showModal && uni.showModal({
-			content: err.message || '请求服务失败',
+			content: err.msg || '请求服务失败',
 			showCancel: false
 		})
 		// #ifdef H5
