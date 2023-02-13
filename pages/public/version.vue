@@ -31,7 +31,7 @@
 					<button size="mini" type="primary" @click="copyImage">复制</button>
 					<button size="mini" type="primary" @click="uploadImage">上传图片</button>
 				</view>
-				<view id="editor"></view>
+				<n-editor :content="contentText.desc" @change="editorChange"></n-editor>
 				<view class="button-box">
 					<button size="mini" type="primary" @click="addVersion">确定</button>
 					<button size="mini" type="default" @click="closeEditPop">取消编辑</button>
@@ -42,20 +42,17 @@
 </template>
 
 <script>
-	import wangeditor from '@/uni_modules/wangeditor'
-
 	export default {
 		data() {
 			return {
-				contentEditor: '',
 				versionList: [],
 				loading: true,
+				
 				contentText: {
 					version: "",
-					content: "",
+					desc: "",
 				},
 				editStatus: "",
-				editContent: "",
 				editIndex: "",
 				uploadSuccessFilePath: '',
 			}
@@ -64,13 +61,6 @@
 			this.getData()
 		},
 		methods: {
-			// 初始化页面数据
-			initPageData() {
-				this.contentText = {
-					version: "",
-					content: "",
-				}
-			},
 			// 复制内容
 			copyImage() {
 				uni.setClipboardData({
@@ -98,12 +88,6 @@
 					}
 				})
 			},
-			// 关闭编辑弹窗
-			closeEditPop() {
-				this.$refs.contentPop.close()
-				this.initPageData()
-				this.editIndex = ''
-			},
 			// 获取数据
 			getData() {
 				let id = this.bookId
@@ -114,10 +98,27 @@
 					this.loading = false
 				})
 			},
+			/* 编辑器相关 */
+			// 初始化页面数据
+			initPageData() {
+				this.contentText = {
+					version: "",
+					desc: "",
+				}
+			},
+			// 关闭编辑弹窗
+			closeEditPop() {
+				this.$refs.contentPop.close()
+				this.initPageData()
+				this.editIndex = ''
+			},
+			// 编辑器内容
+			editorChange(text) {
+				this.contentText.desc = text
+			},
 			// 确定编辑
 			addVersion() {
 				let index = this.editIndex
-				this.contentText.desc = this.contentEditor.txt.html()
 				if (this.editStatus == 'add') {
 					this.$request('addVersion', {
 						version: this.contentText.version,
@@ -152,27 +153,15 @@
 			},
 			// 打开编辑器弹窗
 			openEditContentPop(item, index) {
-				let that = this
-				console.log("????", item, index);
 				if (index || index === 0) {
 					this.editStatus = 'edit'
 					this.editIndex = index
-					console.log("编辑模式")
+					this.contentText = JSON.parse(JSON.stringify(item))
 				} else {
 					this.editStatus = 'add'
-					console.log("新增模式")
 				}
+				console.log(item, index);
 				this.$refs.contentPop.open()
-				this.$nextTick(() => {
-					this.contentEditor = new wangeditor('#editor')
-					this.contentEditor.config.showLinkImgAlt = false
-					this.contentEditor.config.showLinkImgHref = false
-					this.contentEditor.create()
-					if (this.editStatus == 'edit') {
-						this.contentEditor.txt.html(item.desc)
-						this.contentText = item
-					}
-				})
 			},
 		}
 	}

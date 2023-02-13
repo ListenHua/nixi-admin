@@ -25,7 +25,6 @@ exports.main = async (event, context) => {
 		}
 	}
 }
-
 async function login(event) {
 	const wxdata = await uniCloud.httpclient.request(
 		`https://api.weixin.qq.com/sns/jscode2session?appid=${appId}&secret=${appSecret}&js_code=${event.code}&grant_type=authorization_code`, {
@@ -74,7 +73,9 @@ async function login(event) {
 		updateTime: createTime,
 		event: {}
 	}
-	await db.collection("userInfo").add(userData)
+	let add_info = await db.collection("userInfo").add(userData)
+	delete userData.openId
+	userData._id = add_info.id
 	let token = getToken(userData)
 	return {
 		code: 200,

@@ -131,7 +131,7 @@
 
 <script>
 	import LParse from '@/components/li-parse/parse'
-	import wangeditor from '@/uni_modules/wangeditor'
+	
 	export default {
 		components: {
 			LParse
