@@ -1,12 +1,12 @@
 <template>
 	<view class="page-content">
-		<view class="content-edit-pop">
+		<view class="content-edit-pop" v-if="pageLoad">
 			<view class="button-box">
 				<view>{{uploadSuccessFilePath}}</view>
 				<button size="mini" type="primary" @click="copyImage">复制</button>
 				<button size="mini" type="primary" @click="uploadImage">上传图片</button>
 			</view>
-			<view id="editor"></view>
+			<n-editor :content="contentText" @change="editorChange"></n-editor>
 			<view class="button-box">
 				<button size="mini" type="primary" @click="editContent">确定修改</button>
 			</view>
@@ -15,20 +15,33 @@
 </template>
 
 <script>
-	
-
 	export default {
 		data() {
 			return {
 				contentEditor: '',
 				contentText: "",
 				uploadSuccessFilePath: '',
+				pageLoad: false,
 			}
 		},
 		onLoad() {
 			this.getData()
 		},
 		methods: {
+			// 获取数据
+			getData() {
+				this.$request('getAbout', '', {
+					functionName: 'get'
+				}).then(res => {
+					let data = res.data
+					this.pageLoad = true
+					this.contentText = data
+				})
+			},
+			// 编辑器内容
+			editorChange(text) {
+				this.contentText = text
+			},
 			// 复制内容
 			copyImage() {
 				uni.setClipboardData({
@@ -56,26 +69,8 @@
 					}
 				})
 			},
-			// 获取数据
-			getData() {
-				this.$request('getAbout', '', {
-					functionName: 'get'
-				}).then(res => {
-					this.contentText = res.data
-					this.$nextTick(() => {
-						this.contentEditor = new wangeditor('#editor')
-						this.contentEditor.config.showLinkImgAlt = false
-						this.contentEditor.config.showLinkImgHref = false
-						this.contentEditor.config.height = 500
-						this.contentEditor.create()
-						this.contentEditor.txt.html(this.contentText)
-					})
-				})
-			},
 			// 确定编辑
 			editContent() {
-				this.contentText = this.contentEditor.txt.html()
-				console.log(this.contentText)
 				this.$request('editAbout', {
 					content: this.contentText,
 				}, {

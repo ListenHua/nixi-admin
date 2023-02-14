@@ -54,7 +54,7 @@
 				<uni-title type="h1" :title="popStatus=='add'?'新增':'编辑'" align="center" style="margin-bottom: 40rpx;">
 				</uni-title>
 				<uni-forms ref="editInfo" :modelValue="editFormData" :rules="rules">
-					<uni-forms-item label="题目" name="id">
+					<uni-forms-item label="题目" name="text">
 						<view class="content-text">
 							<uni-easyinput placeholder="请输入问题" v-model="editFormData.text" />
 						</view>
@@ -90,57 +90,16 @@
 				</view>
 			</view>
 		</uni-popup>
-
-		<uni-popup ref="contentPop" type="center" :mask-click="false">
-			<view class="content-edit-pop">
-				<view class="button-box">
-					<view class="file-name">{{uploadSuccessFilePath}}</view>
-					<button size="mini" type="primary" @click="copyImage">复制</button>
-					<button size="mini" type="primary" @click="uploadImage">上传图片</button>
-				</view>
-				<view id="editor"></view>
-				<view class="button-box">
-					<button size="mini" type="primary" @click="returnContent">确定</button>
-					<button size="mini" type="default" @click="closeEditPop(1)">取消编辑</button>
-				</view>
-			</view>
-		</uni-popup>
-		<!-- 选择标签弹窗 -->
-		<uni-popup ref="labelPop" type="center">
-			<view class="label-pop">
-				<scroll-view scroll-y="true" style="height: 500rpx;">
-					<view class="label-list">
-						<uni-tag v-for="(item,index) in typeList" size="small" :inverted="!item.check"
-							:text="item.title" type="primary" :style="{'margin-right':'20rpx'}"
-							@click="item.check = !item.check" />
-					</view>
-				</scroll-view>
-				<button size="mini" type="primary" @click="selectLabel">确定</button>
-			</view>
-		</uni-popup>
-		<!-- 查看选项弹窗 -->
-		<uni-popup ref="optionPop" type="center">
-			<view class="option-pop">
-				<view class="option-block" v-for="(item,index) in optionList">
-					<l-parse :content="item.content"></l-parse>
-				</view>
-			</view>
-		</uni-popup>
 	</view>
 </template>
 
 <script>
-	import LParse from '@/components/li-parse/parse'
 	
 	export default {
-		components: {
-			LParse
-		},
 		data() {
 			return {
 				creater: uni.getStorageSync('lastUsername'),
 				labelText: '',
-				typeList: [],
 				searchVal: '',
 				tableData: [],
 				optionList: [],
@@ -152,7 +111,6 @@
 				total: 0,
 				loading: false,
 				editFormData: {},
-				coverUploadUrl: {},
 				typeOption: [],
 				talkOption: [{
 					text: '问答',
@@ -173,7 +131,7 @@
 				}],
 				popStatus: '',
 				rules: {
-					title: {
+					text: {
 						rules: [{
 							required: true,
 							errorMessage: '请输入题目',
@@ -186,12 +144,6 @@
 						}]
 					},
 				},
-				// 正在编辑的信息
-				editInfo: {},
-				// 富文本编辑器
-				contentEditor: '',
-				editIndex: '',
-				uploadSuccessFilePath: '',
 
 			}
 		},
@@ -238,56 +190,6 @@
 			// 打开标签选择弹窗
 			openLabelSelectPop() {
 				this.$refs.labelPop.open()
-			},
-			// 打开编辑器弹窗
-			openEditContentPop(item, index) {
-				console.log("item", item)
-				let that = this
-				this.editIndex = index
-				this.$refs.contentPop.open()
-				this.$nextTick(() => {
-					this.contentEditor = new wangeditor('#editor')
-					this.contentEditor.config.showLinkImgAlt = false
-					this.contentEditor.config.showLinkImgHref = false
-					this.contentEditor.create()
-					this.contentEditor.txt.html(item)
-				})
-			},
-			// 上传图片
-			uploadImage() {
-				uni.chooseImage({
-					count: 1,
-					success: (res) => {
-						let filePath = res.tempFilePaths[0]
-						uniCloud.uploadFile({
-							cloudPath: res.tempFiles[0].name,
-							filePath,
-						}).then(res => {
-							console.log("服务器地址", res);
-							this.uploadSuccessFilePath = res.fileID
-						})
-					}
-				})
-			},
-			// 复制内容
-			copyImage() {
-				uni.setClipboardData({
-					data: this.uploadSuccessFilePath,
-					success: () => {
-						uni.showToast({
-							title: "复制成功"
-						})
-					}
-				})
-			},
-			// 关闭编辑弹窗
-			closeEditPop(type) {
-				if (type === 0) {
-					this.$refs.editPop.close()
-				} else if (type === 1) {
-					this.$refs.contentPop.close()
-					this.editIndex = ''
-				}
 			},
 			// 确认修改
 			submitEdit() {
@@ -377,31 +279,12 @@
 					button: '回答',
 					speed: 100,
 				}
-				this.coverUploadUrl = {}
-			},
-			// 打开编辑内容弹窗
-			toEditContent(item) {
-				uni.navigateTo({
-					url: "/pages/book/content?id=" + item.id
-				})
 			},
 			// 打开编辑弹窗
 			openEditPop(item) {
 				this.popStatus = 'edit'
 				this.editFormData = JSON.parse(JSON.stringify(item))
-				this.coverUploadUrl = {
-					url: item.cover
-				}
 				this.$refs.editPop.open()
-			},
-			// 多选处理
-			selectedItems() {
-				return this.selectedIndexs.map(i => this.tableData[i])
-			},
-			// 多选
-			selectionChange(e) {
-				console.log(e.detail.index);
-				this.selectedIndexs = e.detail.index
 			},
 			getList() {
 				uni.showLoading({

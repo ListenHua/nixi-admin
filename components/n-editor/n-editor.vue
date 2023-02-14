@@ -59,7 +59,9 @@
 				this.$emit('change', editor.getHtml())
 			},
 		},
-		mounted() {},
+		mounted() {
+			console.log(this.content);
+		},
 		beforeDestroy() {
 			const editor = this.editor;
 			if (editor == null) return;
