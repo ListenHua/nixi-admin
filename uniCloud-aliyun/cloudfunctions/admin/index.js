@@ -19,12 +19,19 @@ exports.main = async (event, context) => {
 		return payload
 	}
 	userInfo = payload.userInfo
+	console.log('userInfo', userInfo);
 	switch (event.action) {
 		case 'addBookInfo': {
 			return addBookInfo(event.params)
 		}
 		case 'addTopic': {
 			return addTopic(event.params)
+		}
+		case 'getTopicList': {
+			return getTopicList(event.params)
+		}
+		case 'editTopic': {
+			return editTopic(event.params)
 		}
 		case 'addVersion': {
 			return addVersion(event.params)
@@ -52,9 +59,6 @@ exports.main = async (event, context) => {
 		}
 		case 'editVersion': {
 			return editVersion(event.params)
-		}
-		case 'editTopic': {
-			return editTopic(event.params)
 		}
 		case 'setUserRole': {
 			return setUserRole(event.params)
@@ -124,6 +128,49 @@ async function addVersion(event) {
 		msg: '新增成功!',
 	}
 }
+
+async function getTopicList(event) {
+	let cmd = db.command
+	event = event ? event : {}
+	let limit = event.limit ? event.limit : 15
+	let page = event.page ? event.page - 1 < 0 ? 0 : event.page - 1 : 0
+	let key = {}
+	if (userInfo.username != 'admin') {
+		key.creater = userInfo.username
+	}
+	if (event.title) {
+		key.title = new RegExp(event.title)
+	}
+	if (event.level || event.level === 0) {
+		key.level = event.level
+	}
+	if (event.label && event.label.length != 0) {
+		let ary = []
+		event.label.forEach(item => {
+			ary.push(cmd.eq(item))
+		})
+		key.label = cmd.and(ary)
+	}
+	if (event.topic && event.topic.length != 0) {
+		let ary = []
+		event.topic.forEach(item => {
+			ary.push(cmd.eq(item))
+		})
+		key._id = cmd.or(ary)
+	}
+	let start = page * limit
+	let res;
+	const collection = db.collection('topicList')
+	let total = await collection.where(key).count()
+	res = await collection.where(key).skip(start).limit(limit).orderBy('createTime', 'desc').get()
+	let result = res.data
+	return {
+		code: 200,
+		msg: "请求成功",
+		total: total.total,
+		data: result
+	}
+}
 // 添加题目
 async function addTopic(event) {
 	let {
@@ -150,6 +197,32 @@ async function addTopic(event) {
 		msg: '新增成功!',
 	}
 }
+
+async function editTopic(event) {
+	let {
+		_id,
+		title,
+		type,
+		label,
+		option,
+		answer,
+		level,
+	} = event
+	const collection = db.collection('topicList')
+	let res = await collection.doc(_id).update({
+		title,
+		type,
+		label: label.split(','),
+		option,
+		answer,
+		level,
+	})
+	return {
+		code: 200,
+		msg: '修改成功!',
+	}
+}
+
 // 添加资料信息
 async function addBookInfo(event) {
 	let {
@@ -389,31 +462,6 @@ async function setUserRole(event) {
 	const collection = db.collection('userInfo')
 	let res = await collection.doc(user).update({
 		role,
-	})
-	return {
-		code: 200,
-		msg: '修改成功!',
-	}
-}
-
-async function editTopic(event) {
-	let {
-		_id,
-		title,
-		type,
-		label,
-		option,
-		answer,
-		level,
-	} = event
-	const collection = db.collection('topicList')
-	let res = await collection.doc(_id).update({
-		title,
-		type,
-		label,
-		option,
-		answer,
-		level,
 	})
 	return {
 		code: 200,

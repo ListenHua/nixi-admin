@@ -483,7 +483,7 @@
 				this.popStatus = 'edit'
 				let data = JSON.parse(JSON.stringify(item))
 				console.log('data————————>', data);
-				data.label = typeof(data.label) == 'array' ? data.label.join(',') : data.label
+				data.label = typeof(data.label) != 'string' ? data.label.join(',') : data.label
 				this.editFormData = data
 				this.coverUploadUrl = {
 					url: item.cover
@@ -509,10 +509,16 @@
 					limit: this.pageSize,
 					creater: this.creater == 'admin' ? '' : this.creater
 				}, {
-					functionName: 'get'
+					functionName: 'admin'
 				}).then(res => {
 					this.total = res.total
 					this.tableData = res.data
+					this.tableData.map(item => {
+						console.log(typeof(item.label));
+						if (typeof(item.label) == 'object') {
+							item.label = item.label.join(',')
+						}
+					})
 					uni.hideLoading()
 				})
 			},
