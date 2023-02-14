@@ -16,7 +16,7 @@
 		<view class="uni-container">
 			<uni-table :loading="loading" border stripe :emptyText="$t('common.empty')">
 				<uni-tr>
-					<uni-th width="300" align="center">题目</uni-th>
+					<uni-th width="100" align="center">题目</uni-th>
 					<uni-th width="80" align="center">类型</uni-th>
 					<uni-th align="center">等级</uni-th>
 					<uni-th align="center">标签</uni-th>
@@ -25,9 +25,9 @@
 					<uni-th align="center">操作</uni-th>
 				</uni-tr>
 				<uni-tr v-for="(item ,index) in tableData" :key="index">
-					<uni-td>
+					<uni-td style="max-width: 800rpx;">
 						<scroll-view scroll-y style="max-height: 300rpx;">
-							<l-parse :content="item.title"></l-parse>
+							<n-html :content="item.title"></n-html>
 						</scroll-view>
 					</uni-td>
 					<uni-td align="center">
@@ -124,7 +124,7 @@
 					<button size="mini" type="primary" @click="copyImage">复制</button>
 					<button size="mini" type="primary" @click="uploadImage">上传图片</button>
 				</view>
-				<view id="editor"></view>
+				<n-editor :content="contentEditor" @change="editorChange"></n-editor>
 				<view class="button-box">
 					<button size="mini" type="primary" @click="returnContent">确定</button>
 					<button size="mini" type="default" @click="closeEditPop(1)">取消编辑</button>
@@ -141,7 +141,7 @@
 				<scroll-view scroll-y="true" style="height: 500rpx;">
 					<view class="label-list">
 						<uni-tag v-for="(item,index) in labelList" size="small" :inverted="!item.check"
-							:text="item.name" type="primary" :style="{'margin-right':'20rpx'}"
+							:text="item.name" type="primary" :style="{'margin':'10rpx'}"
 							@click="item.check = !item.check" />
 					</view>
 				</scroll-view>
@@ -152,7 +152,7 @@
 		<uni-popup ref="optionPop" type="center">
 			<view class="option-pop">
 				<view class="option-block" v-for="(item,index) in optionList">
-					<l-parse :content="item.content"></l-parse>
+					<n-html :content="item.content"></n-html>
 				</view>
 			</view>
 		</uni-popup>
@@ -160,12 +160,7 @@
 </template>
 
 <script>
-	import LParse from '@/components/li-parse/parse'
-	
 	export default {
-		components: {
-			LParse
-		},
 		data() {
 			return {
 				creater: uni.getStorageSync('lastUsername'),
@@ -218,8 +213,6 @@
 						}]
 					},
 				},
-				// 正在编辑的信息
-				editInfo: {},
 				// 富文本编辑器
 				contentEditor: '',
 				editIndex: '',
@@ -253,6 +246,7 @@
 				})
 				this.editFormData.label = ary.join(',')
 				this.$refs.labelPop.close()
+				console.log('editFormData——————————>', this.editFormData);
 			},
 			// 添加标签
 			addLabel() {
@@ -320,24 +314,22 @@
 					content: ''
 				})
 			},
+			// 编辑器内容
+			editorChange(text) {
+				this.contentEditor = text
+			},
 			// 打开编辑器弹窗
 			openEditContentPop(item, index) {
 				console.log("item", item)
 				let that = this
 				this.editIndex = index
 				this.$refs.contentPop.open()
-				this.$nextTick(() => {
-					this.contentEditor = new wangeditor('#editor')
-					this.contentEditor.config.showLinkImgAlt = false
-					this.contentEditor.config.showLinkImgHref = false
-					this.contentEditor.create()
-					this.contentEditor.txt.html(item)
-				})
+				this.contentEditor = item
 			},
 			// 返回富文本框结果
 			returnContent() {
 				let index = this.editIndex
-				let content = this.contentEditor.txt.html()
+				let content = this.contentEditor
 				if (index == -1) {
 					this.editFormData.title = content
 				} else {
@@ -489,7 +481,10 @@
 			// 打开编辑弹窗
 			openEditPop(item) {
 				this.popStatus = 'edit'
-				this.editFormData = JSON.parse(JSON.stringify(item))
+				let data = JSON.parse(JSON.stringify(item))
+				console.log('data————————>', data);
+				data.label = typeof(data.label) == 'array' ? data.label.join(',') : data.label
+				this.editFormData = data
 				this.coverUploadUrl = {
 					url: item.cover
 				}
@@ -547,7 +542,8 @@
 		max-height: 500px;
 		overflow-y: scroll;
 		overflow-x: hidden;
-		.option-block{
+
+		.option-block {
 			background-color: #f4f4f4;
 			padding: 20rpx;
 			border-radius: 10rpx;
@@ -557,19 +553,23 @@
 
 	.edit-pop {
 		width: 1000rpx;
-		padding: 80rpx;
+		padding: 80rpx 80rpx 0;
 		background-color: #fff;
 		border-radius: 8rpx;
 		max-height: 500px;
 		overflow-y: scroll;
 		overflow-x: hidden;
+		position: relative;
 	}
 
 	.button-box {
 		width: 100%;
 		display: flex;
 		justify-content: flex-end;
-		margin-top: 40rpx;
+		padding: 30rpx 0;
+		background-color: #fff;
+		position: sticky;
+		bottom: 0;
 
 		button {
 			margin: 0 20rpx;
