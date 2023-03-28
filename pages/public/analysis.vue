@@ -13,15 +13,13 @@
 				<uni-th align="center">操作</uni-th>
 			</uni-tr>
 			<uni-tr v-for="(item ,index) in analysisList" :key="index">
-				<uni-td align="center">
+				<uni-td align="center" width="300rpx">
 					<scroll-view scroll-y style="max-height: 300rpx;">
 						<l-parse :content="item.topic.title"></l-parse>
 					</scroll-view>
 				</uni-td>
-				<uni-td align="center">
-					<scroll-view scroll-y style="max-height: 300rpx;">
-						<l-parse :content="item.content"></l-parse>
-					</scroll-view>
+				<uni-td align="center" style="max-width:500rpx;">
+					<view class="name">{{item.content}}</view>
 				</uni-td>
 				<uni-td align="center">
 					<view class="name">{{item.author.nickName}}({{item.author.id}})</view>

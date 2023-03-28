@@ -3,59 +3,123 @@ const db = uniCloud.database()
 const {
 	verifyInfo
 } = require("wx-common");
+var userInfo;
 exports.main = async (event, context) => {
+	let params = event.params
+	userInfo = verifyInfo(params.token)
+	delete params.token
 	switch (event.action) {
 		case 'systemData': {
-			return systemData(event.params)
+			return systemData(params)
 		}
 		case 'getBookList': {
-			return getBookList(event.params)
+			return getBookList(params)
 		}
 		case 'getBookInfo': {
-			return getBookInfo(event.params)
+			return getBookInfo(params)
 		}
 		case 'getBookContent': {
-			return getBookContent(event.params)
+			return getBookContent(params)
 		}
 		case 'getTopicList': {
-			return getTopicList(event.params)
+			return getTopicList(params)
 		}
 		case 'getTopicInfo': {
-			return getTopicInfo(event.params)
+			return getTopicInfo(params)
 		}
 		case 'getVersion': {
-			return getVersion(event.params)
+			return getVersion(params)
 		}
 		case 'getAbout': {
-			return getAbout(event.params)
+			return getAbout(params)
 		}
 		case 'getLabelList': {
-			return getLabelList(event.params)
+			return getLabelList(params)
 		}
 		case 'getExamDetail': {
-			return getExamDetail(event.params)
+			return getExamDetail(params)
 		}
 		case 'topicAnalysis': {
-			return topicAnalysis(event.params)
+			return topicAnalysis(params)
 		}
 		case 'getExamReply': {
-			return getExamReply(event.params)
+			return getExamReply(params)
 		}
 		case 'getReplyDetail': {
-			return getReplyDetail(event.params)
+			return getReplyDetail(params)
 		}
 		case 'myCreateExam': {
-			return myCreateExam(event.params)
+			return myCreateExam(params)
 		}
 		case 'simulationList': {
-			return simulationList(event.params)
+			return simulationList(params)
 		}
 		case 'simulationTopic': {
-			return simulationTopic(event.params)
+			return simulationTopic(params)
+		}
+		case 'simulationRecord': {
+			return simulationRecord(params)
+		}
+		case 'simulationRecordDetail': {
+			return simulationRecordDetail(params)
 		}
 		default: {
 			return
 		}
+	}
+}
+
+// 获取考卷详情
+async function simulationRecordDetail(event) {
+	let {
+		id
+	} = event
+	const history = db.collection('user-simulation-record')
+	let res = await history.doc(id).get()
+	if (res.data.length <= 0) {
+		return {
+			code: 300,
+			msg: "找不到该记录",
+		}
+	}
+	let result = res.data[0]
+	let special = await db.collection('simulation-list').where({
+		key: result.key
+	}).get()
+	result.simulation = special.data[0]
+	return {
+		code: 200,
+		msg: "请求成功",
+		data: result
+	}
+}
+
+// 获取模拟面试记录
+async function simulationRecord(event) {
+	if (userInfo.code) return userInfo
+	let cmd = db.command
+	let limit = event.limit ? event.limit : 15
+	let page = event.page ? event.page - 1 < 0 ? 0 : event.page - 1 : 0
+	let start = page * limit
+	const collection = db.collection('user-simulation-record')
+	let key = {
+		creatorId: cmd.eq(userInfo._id)
+	}
+	let res = await collection.where(key).skip(start).limit(limit).orderBy('createTime', 'desc').get()
+	let total = await collection.where(key).count()
+	let result = res.data
+	for (let i in result) {
+		let special = await db.collection('simulation-list').where({
+			key: result[i].key
+		}).get()
+		result[i].simulation = special.data[0]
+	}
+	console.log('userInfo----->', result)
+	return {
+		code: 200,
+		msg: "请求成功",
+		total: total.total,
+		data: result
 	}
 }
 
@@ -117,14 +181,12 @@ async function simulationList(event) {
 
 // 获取我创建的考卷
 async function myCreateExam(event) {
+	if (userInfo.code) return userInfo
 	let cmd = db.command
 	let limit = event.limit ? event.limit : 15
 	let page = event.page ? event.page - 1 < 0 ? 0 : event.page - 1 : 0
 	let start = page * limit
-	let userInfo = verifyInfo(event.token)
-	if (userInfo.code) return userInfo
 	const collection = db.collection('testPaper')
-	delete event.token
 	let key = {
 		creatorId: cmd.eq(userInfo._id)
 	}
@@ -146,7 +208,7 @@ async function myCreateExam(event) {
 
 // 获取考卷详情
 async function getReplyDetail(event) {
-	let userInfo = verifyInfo(event.token)
+	if (userInfo.code) return userInfo
 	let {
 		id
 	} = event
@@ -169,14 +231,12 @@ async function getReplyDetail(event) {
 
 // 获取收到的考卷
 async function getExamReply(event) {
+	if (userInfo.code) return userInfo
 	let cmd = db.command
 	let limit = event.limit ? event.limit : 15
 	let page = event.page ? event.page - 1 < 0 ? 0 : event.page - 1 : 0
 	let start = page * limit
-	let userInfo = verifyInfo(event.token)
-	if (userInfo.code) return userInfo
 	const collection = db.collection('answerHistory')
-	delete event.token
 	let key = {
 		info: {
 			creator: {
@@ -220,7 +280,7 @@ async function topicAnalysis(event) {
 	let limit = event.limit ? event.limit : 15
 	let page = event.page ? event.page - 1 < 0 ? 0 : event.page - 1 : 0
 	let key = {
-		id: cmd.eq(event.id),
+		topicId: cmd.eq(event.id),
 		status: cmd.eq(1)
 	}
 	let start = page * limit
@@ -458,7 +518,7 @@ async function getBookInfo(event) {
 				data: res.data[0]
 			}
 		}
-	} catch {
+	} catch (e) {
 		return {
 			code: 400,
 			msg: "参数错误",

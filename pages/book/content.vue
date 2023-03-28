@@ -162,7 +162,6 @@
 			// 新增
 			addBookContent() {
 				let list = this.contentList
-				this.contentText.content = this.contentEditor.txt.html()
 				let params = {
 					book_id: this.bookId,
 					title: this.contentText.title,

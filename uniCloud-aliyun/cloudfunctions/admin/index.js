@@ -24,6 +24,9 @@ exports.main = async (event, context) => {
 		case 'addBookInfo': {
 			return addBookInfo(event.params)
 		}
+		case 'getBookList': {
+			return getBookList(event.params)
+		}
 		case 'addTopic': {
 			return addTopic(event.params)
 		}
@@ -171,6 +174,44 @@ async function getTopicList(event) {
 		data: result
 	}
 }
+// 获取资料列表
+async function getBookList(event) {
+	event = event ? event : {}
+	let limit = event.limit ? event.limit : 15
+	let page = event.page ? event.page - 1 < 0 ? 0 : event.page - 1 : 0
+	let key = {}
+	if (event.key) {
+		key.title = new RegExp(event.key)
+	}
+	if (userInfo.username != 'admin') {
+		key.creater = new RegExp(userInfo.username)
+	}
+	let start = page * limit
+	const collection = db.collection('bookList')
+	let res;
+	let total = await collection.where(key).count()
+	if (event.random) {
+		let size = event.size ? event.size : 1
+		res = await collection.aggregate().sample({
+			size
+		}).end()
+	} else {
+		res = await collection.where(key).skip(start).limit(limit).get()
+	}
+	let result = res.data.map(val => {
+		delete val.list
+		val.id = val._id
+		return val
+	})
+
+	return {
+		code: 200,
+		msg: "请求成功",
+		total: total.total,
+		data: result
+	}
+}
+
 // 添加题目
 async function addTopic(event) {
 	let {
@@ -420,7 +461,7 @@ async function topicAnalysis(event) {
 	const collection = db.collection('topic-analysis')
 	let res;
 	let total = await collection.count()
-	res = await collection.skip(start).limit(limit).get()
+	res = await collection.skip(start).limit(limit).orderBy('status', 'asc').get()
 	let result = res.data
 	for (let i in result) {
 		let user = await db.collection('userInfo').doc(result[i].createId).get()
