@@ -1,101 +1,66 @@
 'use strict';
-let uniID = require('uni-id')
+
+const uniID = require('uni-id');
 const {
 	verifyToken
-} = require("wx-common");
-const db = uniCloud.database()
+} = require('wx-common');
+const db = uniCloud.database();
+const createTime = () => new Date().getTime();
 let userInfo;
-const createTime = new Date().getTime()
-exports.main = async (event, context) => {
-	//UNI_WYQ:这里的uniID换成新的，保证多人访问不会冲突
-	uniID = uniID.createInstance({
-		context
-	})
-	const {
-		uniIdToken
-	} = event;
-	let payload = await uniID.checkToken(uniIdToken)
+
+const handleErrors = (payload) => {
 	if (payload.code && payload.code > 0) {
-		return payload
+		throw new Error(payload);
 	}
-	userInfo = payload.userInfo
-	console.log('userInfo', userInfo);
-	switch (event.action) {
-		case 'addBookInfo': {
-			return addBookInfo(event.params)
+};
+
+const operations = {
+	addBookInfo: async (params) => awaitaddBookInfo(params),
+	getBookList: async (params) => getBookList(params),
+	addTopic: async (params) => addTopic(params),
+	getTopicList: async (params) => getTopicList(params),
+	editTopic: async (params) => editTopic(params),
+	addVersion: async (params) => addVersion(params),
+	addLabel: async (params) => addLabel(params),
+	editBookInfo: async (params) => editBookInfo(params),
+	addBookContent: async (params) => addBookContent(params),
+	getBookContent: async (params) => getBookContent(params),
+	editBookContent: async (params) => editBookContent(params),
+	deleteBookContent: async (params) => deleteBookContent(params),
+	editAbout: async (params) => editAbout(params),
+	editVersion: async (params) => editVersion(params),
+	setUserRole: async (params) => setUserRole(params),
+	microUser: async (params) => microUser(params),
+	topicAnalysis: async (params) => topicAnalysis(params),
+	setAnalysisStatus: async (params) => setAnalysisStatus(params),
+	deleteAnalysis: async (params) => deleteAnalysis(params),
+	getSimulationList: async (params) => getSimulationList(params),
+	addSimulationTopic: async (params) => addSimulationTopic(params),
+	getSimulationTopic: async (params) => getSimulationTopic(params),
+	deleteSimulationTopic: async (params) => deleteSimulationTopic(params),
+	editSimulationTopic: async (params) => editSimulationTopic(params),
+};
+
+exports.main = async (event, context) => {
+	try {
+		const {
+			uniIdToken
+		} = event;
+		const payload = await uniID.checkToken(uniIdToken);
+		handleErrors(payload);
+		userInfo = payload.userInfo;
+		console.log('userInfo', userInfo);
+		const operation = operations[event.action];
+		if (!operation) {
+			throw new Error('未知操作');
 		}
-		case 'getBookList': {
-			return getBookList(event.params)
-		}
-		case 'addTopic': {
-			return addTopic(event.params)
-		}
-		case 'getTopicList': {
-			return getTopicList(event.params)
-		}
-		case 'editTopic': {
-			return editTopic(event.params)
-		}
-		case 'addVersion': {
-			return addVersion(event.params)
-		}
-		case 'addLabel': {
-			return addLabel(event.params)
-		}
-		case 'editBookInfo': {
-			return editBookInfo(event.params)
-		}
-		case 'addBookContent': {
-			return addBookContent(event.params)
-		}
-		case 'getBookContent': {
-			return getBookContent(event.params)
-		}
-		case 'editBookContent': {
-			return editBookContent(event.params)
-		}
-		case 'deleteBookContent': {
-			return deleteBookContent(event.params)
-		}
-		case 'editAbout': {
-			return editAbout(event.params)
-		}
-		case 'editVersion': {
-			return editVersion(event.params)
-		}
-		case 'setUserRole': {
-			return setUserRole(event.params)
-		}
-		case 'microUser': {
-			return microUser(event.params)
-		}
-		case 'topicAnalysis': {
-			return topicAnalysis(event.params)
-		}
-		case 'setAnalysisStatus': {
-			return setAnalysisStatus(event.params)
-		}
-		case 'deleteAnalysis': {
-			return deleteAnalysis(event.params)
-		}
-		case 'getSimulationList': {
-			return getSimulationList(event.params)
-		}
-		case 'addSimulationTopic': {
-			return addSimulationTopic(event.params)
-		}
-		case 'getSimulationTopic': {
-			return getSimulationTopic(event.params)
-		}
-		case 'deleteSimulationTopic': {
-			return deleteSimulationTopic(event.params)
-		}
-		case 'editSimulationTopic': {
-			return editSimulationTopic(event.params)
-		}
-		default: {
-			return
-		}
+		const result = await operation(event.params);
+		return result;
+	} catch (error) {
+		return {
+			code: 500,
+			msg: error.message
+		};
 	}
 }
 // 添加标签
@@ -132,48 +97,6 @@ async function addVersion(event) {
 	}
 }
 
-async function getTopicList(event) {
-	let cmd = db.command
-	event = event ? event : {}
-	let limit = event.limit ? event.limit : 15
-	let page = event.page ? event.page - 1 < 0 ? 0 : event.page - 1 : 0
-	let key = {}
-	if (userInfo.username != 'admin') {
-		key.creater = userInfo.username
-	}
-	if (event.title) {
-		key.title = new RegExp(event.title)
-	}
-	if (event.level || event.level === 0) {
-		key.level = event.level
-	}
-	if (event.label && event.label.length != 0) {
-		let ary = []
-		event.label.forEach(item => {
-			ary.push(cmd.eq(item))
-		})
-		key.label = cmd.and(ary)
-	}
-	if (event.topic && event.topic.length != 0) {
-		let ary = []
-		event.topic.forEach(item => {
-			ary.push(cmd.eq(item))
-		})
-		key._id = cmd.or(ary)
-	}
-	let start = page * limit
-	let res;
-	const collection = db.collection('topicList')
-	let total = await collection.where(key).count()
-	res = await collection.where(key).skip(start).limit(limit).orderBy('createTime', 'desc').get()
-	let result = res.data
-	return {
-		code: 200,
-		msg: "请求成功",
-		total: total.total,
-		data: result
-	}
-}
 // 获取资料列表
 async function getBookList(event) {
 	event = event ? event : {}
@@ -212,16 +135,46 @@ async function getBookList(event) {
 	}
 }
 
+async function getTopicList({
+	limit = 15,
+	page = 1,
+	title,
+	level,
+	label = [],
+	topic = []
+} = {}) {
+	const cmd = db.command;
+	const start = (page - 1) * limit;
+	const key = {};
+	if (userInfo.username !== 'admin') key.creater = userInfo.username;
+	if (title) key.title = new RegExp(title);
+	if (level || level === 0) key.level = level;
+	if (label.length) key.label = cmd.and(label.map(item => cmd.eq(item)));
+	if (topic.length) key._id = cmd.or(topic.map(item => cmd.eq(item)));
+	const collection = db.collection('topicList');
+	const [count, data] = await Promise.all([
+		collection.where(key).count(),
+		collection.where(key).skip(start).limit(limit).orderBy('createTime', 'desc').get(),
+	]);
+	return {
+		code: 200,
+		msg: '请求成功',
+		total: count.total,
+		data: data.data,
+	};
+}
+
+
 // 添加题目
-async function addTopic(event) {
-	let {
-		title,
-		type,
-		label,
-		option,
-		answer,
-		level,
-	} = event
+async function addTopic({
+	title,
+	type,
+	label,
+	option,
+	answer,
+	level,
+	analysis,
+}) {
 	const collection = db.collection('topicList')
 	let res = await collection.add({
 		title,
@@ -232,6 +185,7 @@ async function addTopic(event) {
 		creater: userInfo.username,
 		level,
 		createTime,
+		analysis,
 	})
 	return {
 		code: 200,
@@ -248,6 +202,7 @@ async function editTopic(event) {
 		option,
 		answer,
 		level,
+		analysis,
 	} = event
 	const collection = db.collection('topicList')
 	let res = await collection.doc(_id).update({
@@ -257,6 +212,7 @@ async function editTopic(event) {
 		option,
 		answer,
 		level,
+		analysis,
 	})
 	return {
 		code: 200,
