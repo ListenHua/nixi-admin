@@ -5,7 +5,7 @@ const {
 	verifyToken
 } = require('wx-common');
 const db = uniCloud.database();
-const createTime = () => new Date().getTime();
+const createTime = new Date().getTime();
 let userInfo;
 
 const handleErrors = (payload) => {
@@ -151,6 +151,7 @@ async function getTopicList({
 	if (level || level === 0) key.level = level;
 	if (label.length) key.label = cmd.and(label.map(item => cmd.eq(item)));
 	if (topic.length) key._id = cmd.or(topic.map(item => cmd.eq(item)));
+	console.log('search-key', key);
 	const collection = db.collection('topicList');
 	const [count, data] = await Promise.all([
 		collection.where(key).count(),
