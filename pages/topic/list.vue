@@ -13,13 +13,12 @@
 		<view class="uni-container">
 			<uni-table :loading="loading" border stripe :emptyText="$t('common.empty')">
 				<uni-tr>
-					<uni-th width="100" align="center">题目</uni-th>
+					<uni-th align="center">题目</uni-th>
 					<uni-th width="80" align="center">类型</uni-th>
-					<uni-th align="center">等级</uni-th>
-					<uni-th align="center">标签</uni-th>
-					<uni-th align="center">选项</uni-th>
-					<uni-th align="center">答案</uni-th>
-					<uni-th align="center">操作</uni-th>
+					<uni-th width="80" align="center">等级</uni-th>
+					<uni-th width="200" align="center">标签</uni-th>
+					<uni-th width="120" align="center">选项/答案</uni-th>
+					<uni-th width="200" align="center">操作</uni-th>
 				</uni-tr>
 				<uni-tr v-for="(item, index) in tableData" :key="index">
 					<uni-td style="max-width: 800rpx;">
@@ -30,14 +29,7 @@
 					</uni-td>
 					<uni-td align="center">{{ item.level === 0 ? '初级' : item.level === 1 ? '中级' : '高级' }}</uni-td>
 					<uni-td align="center">{{ item.label }}</uni-td>
-					<uni-td align="center">
-						<view v-if="item.type === 2" class="name">-</view>
-						<button v-else class="uni-button" size="mini" type="primary" @click="viewOption(item.option)">查看选项</button>
-					</uni-td>
-					<uni-td align="center">
-						<button v-if="item.type === 2" class="uni-button" size="mini" type="primary">查看答案</button>
-						<view v-else class="name">{{ item.answer }}</view>
-					</uni-td>
+					<uni-td align="center"><button class="uni-button" size="mini" type="primary" @click="viewOption(item)">查看答案</button></uni-td>
 					<uni-td>
 						<view class="uni-group">
 							<button class="uni-button" size="mini" type="primary" @click="openEditPop(item)">{{ $t('common.button.edit') }}</button>
@@ -68,7 +60,7 @@
 							<button class="uni-button" size="mini" type="primary" @click="openLabelSelectPop">选择标签</button>
 						</view>
 					</uni-forms-item>
-					<uni-forms-item label="选项" v-if="editFormData.type == 0 || editFormData.type == 1">
+					<uni-forms-item label="选项" v-if="editFormData.type !== 2">
 						<checkbox-group @change="changeChecked">
 							<view class="content-text" v-for="(item, index) in editFormData.option" :key="index">
 								<checkbox :value="index.toString()" :checked="item.checked" style="transform:scale(0.7)" />
@@ -77,6 +69,12 @@
 								<button v-if="editFormData.option.length > 1" class="uni-button" size="mini" type="warn" @click="deleteOption(index)">删除</button>
 							</view>
 						</checkbox-group>
+					</uni-forms-item>
+					<uni-forms-item label="答案" v-else>
+						<view class="content-text">
+							<view>{{ editFormData.answer }}</view>
+							<button class="uni-button" size="mini" type="primary" @click="openEditContentPop(editFormData.answer, 'answer')">编辑答案</button>
+						</view>
 					</uni-forms-item>
 					<uni-forms-item label="答案解析" name="analysis">
 						<view class="content-text">
@@ -134,7 +132,11 @@
 		<!-- 查看选项弹窗 -->
 		<uni-popup ref="optionPop" type="center">
 			<view class="option-pop">
-				<view class="option-block" v-for="(item, index) in optionList"><n-html :content="item.content"></n-html></view>
+				<view v-if="detailInfo.type !== 2" class="option-block" v-for="(item, index) in detailInfo.option">
+					<checkbox :checked="detailInfo.answer.includes(index)" style="transform: scale(0.7);" />
+					<n-html :content="item.content"></n-html>
+				</view>
+				<view v-else><n-html :content="detailInfo.answer"></n-html></view>
 			</view>
 		</uni-popup>
 	</view>
@@ -209,7 +211,8 @@ export default {
 			// 富文本编辑器
 			contentEditor: '',
 			editIndex: '',
-			uploadSuccessFilePath: ''
+			uploadSuccessFilePath: '',
+			detailInfo: {}
 		};
 	},
 	mounted() {
@@ -227,8 +230,14 @@ export default {
 			});
 		},
 		// 查看选项
-		viewOption(data) {
-			this.optionList = data;
+		viewOption(info) {
+			let data = JSON.parse(JSON.stringify(info));
+			if (data.type !== 2) {
+				data.answer = data.answer.split('').map(item => {
+					return Number(item);
+				});
+			}
+			this.detailInfo = data;
 			this.$refs.optionPop.open();
 		},
 		// 上下页切换
@@ -332,6 +341,9 @@ export default {
 				case 'analysis':
 					editFormData.analysis = contentEditor;
 					break;
+				case 'answer':
+					editFormData.answer = contentEditor;
+					break;
 				default:
 					if (editFormData.type === 2) {
 						editFormData.answer = contentEditor;
@@ -413,15 +425,14 @@ export default {
 		},
 		// 处理数据提交
 		handleSubmit() {
-			const { option, ...restData } = this.editFormData;
+			const { option, type, ...restData } = this.editFormData;
+			if (type === 2) return this.editFormData;
 			const answer = option.reduce((acc, curr, index) => {
 				if (curr.checked) {
 					acc += index.toString();
 				}
 				return acc;
 			}, '');
-			console.log('option', option);
-			console.log('answer', answer);
 			const newOption = option.map(item => ({
 				content: item.content
 			}));
@@ -438,10 +449,15 @@ export default {
 				title: '提示',
 				content: '是否要删除该题目?',
 				success: res => {
+					uni.showLoading({
+						title: '删除中...',
+						mask: true
+					});
 					this.$request('topic', item, {
 						functionName: 'remove'
 					})
 						.then(res => {
+							uni.hideLoading();
 							if (res.code == 200) {
 								uni.showToast({
 									title: '删除成功!如果误删请联系管理员',
@@ -457,6 +473,7 @@ export default {
 							}
 						})
 						.catch(err => {
+							uni.hideLoading();
 							console.log('表单错误信息：', err);
 						});
 				}
@@ -578,6 +595,7 @@ export default {
 	overflow-x: hidden;
 
 	.option-block {
+		display: flex;
 		background-color: #f4f4f4;
 		padding: 20rpx;
 		border-radius: 10rpx;

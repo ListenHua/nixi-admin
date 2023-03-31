@@ -64,18 +64,23 @@ exports.main = async (event, context) => {
 	}
 }
 // 添加标签
-async function addLabel(event) {
-	let {
-		name,
-	} = event
-	const collection = db.collection('labelList')
-	let res = await collection.add({
-		name,
-		createTime,
-	})
+async function addLabel({
+	name,
+}) {
+	if (name) {
+		const collection = db.collection('labelList')
+		let res = await collection.add({
+			name,
+			createTime,
+		})
+		return {
+			code: 200,
+			msg: '新增成功!',
+		}
+	}
 	return {
-		code: 200,
-		msg: '新增成功!',
+		code: 400,
+		msg: '标签名不能为空!',
 	}
 }
 // 添加版本描述
